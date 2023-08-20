@@ -1,3 +1,4 @@
+# pylint: disable=invalid-string-quote
 from django.conf import settings
 from django.urls import path
 
