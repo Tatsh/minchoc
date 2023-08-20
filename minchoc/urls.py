@@ -6,6 +6,7 @@ from . import views
 
 __all__ = ('urlpatterns',)
 
+# https://learn.microsoft.com/en-us/nuget/api/package-publish-resource
 urlpatterns = [
     path('$metadata', views.metadata),
     path('FindPackagesById()', views.find_packages_by_id),
