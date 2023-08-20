@@ -9,6 +9,7 @@ from defusedxml.ElementTree import parse as parse_xml
 from django.conf import settings
 from django.core.files import File
 from django.db import IntegrityError
+from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -18,7 +19,7 @@ from loguru import logger
 
 from .constants import FEED_XML_POST, FEED_XML_PRE
 from .filteryacc import parser as filter_parser
-from .models import Author, NugetUser, Package, PackageVersionDownloadCount, Tag
+from .models import Author, NugetUser, Package, Tag
 
 NUSPEC_XSD_URI_PREFIX = '{http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd}'
 NUSPEC_FIELD_AUTHORS = f'{NUSPEC_XSD_URI_PREFIX}authors'
@@ -68,6 +69,8 @@ def metadata(_request: HttpRequest, ending: str = '\n') -> HttpResponse:
 
 
 def make_entry(host: str, package: Package, ending: str = '\n') -> str:
+    total_downloads = Package.objects.filter(nuget_id=package.nuget_id).aggregate(
+        total_downloads=Sum('download_count'))['total_downloads']
     return f'''<entry>
     <id>{host}/api/v2/Packages(Id='{package.nuget_id}',Version='{package.version}')</id>
     <category term="NuGetGallery.V2FeedPackage" scheme="http://schemas.microsoft.com/ado/2007/08/dataservices/scheme" />
@@ -83,7 +86,7 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
         <d:Copyright>{package.copyright or ''}</d:Copyright>
         <d:Dependencies></d:Dependencies>
         <d:Description>{package.description or ''}</d:Description>
-        <d:DownloadCount m:type="Edm.Int32">{package.download_count}</d:DownloadCount>
+        <d:DownloadCount m:type="Edm.Int32">{total_downloads}</d:DownloadCount>
         <d:GalleryDetailsUrl>{host}/package/{package.nuget_id}/{package.version}</d:GalleryDetailsUrl>
         <d:IconUrl>{package.icon_url or ''}</d:IconUrl>
         <d:IsAbsoluteLatestVersion m:type="Edm.Boolean">{'true' if package.is_absolute_latest_version else 'false'}</d:IsAbsoluteLatestVersion>
@@ -106,7 +109,7 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
         <d:Tags xml:space="preserve"> {' '.join(x.name for x in package.tags.all())} </d:Tags>
         <d:Title>{package.title}</d:Title>
         <d:Version>{package.version}</d:Version>
-        <d:VersionDownloadCount m:type="Edm.Int32">{package.version_download_count.count}</d:VersionDownloadCount>
+        <d:VersionDownloadCount m:type="Edm.Int32">{package.download_count}</d:VersionDownloadCount>
     </m:properties>
 </entry>{ending}'''
 
@@ -168,10 +171,6 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
         if request.method == 'GET':
             with package.file.open('rb') as f:
                 package.download_count += 1
-                version_count = package.version_download_count.filter(version=version).first()
-                assert version_count is not None
-                version_count.count += 1
-                version_count.save()
                 package.save()
                 return HttpResponse(f.read(), content_type='application/zip')
         if request.method == 'DELETE' and settings.ALLOW_PACKAGE_DELETION:

@@ -49,15 +49,6 @@ def post_save_receiver(
 post_save.connect(post_save_receiver, sender=settings.AUTH_USER_MODEL)
 
 
-class PackageVersionDownloadCount(models.Model):
-    count = models.PositiveBigIntegerField()
-    version = models.CharField(max_length=128)
-
-    def __str__(self) -> str:
-        label = '1 download' if self.count == 1 else f'{self.count} downloads'
-        return f'{self.version}: {label}'
-
-
 class Author(models.Model):
     """Author of the software, not the nuget spec."""
     name = models.CharField(max_length=255, unique=True)
@@ -75,7 +66,9 @@ class Tag(models.Model):
 
 class Package(models.Model):
     class Meta:
-        unique_together = (('nuget_id', 'version'))
+        constraints = [
+            models.UniqueConstraint(fields=('nuget_id', 'version'), name='id_and_version_uniq')
+        ]
 
     authors = models.ManyToManyField(Author)  # type: ignore[var-annotated]
     copyright = models.TextField(null=True)
@@ -109,8 +102,6 @@ class Package(models.Model):
     version2 = models.PositiveIntegerField(null=True)
     version3 = models.PositiveIntegerField(null=True)
     version_beta = models.CharField(max_length=128, null=True)
-    version_download_count = models.ManyToManyField(
-        PackageVersionDownloadCount)  # type: ignore[var-annotated]
 
     def __str__(self) -> str:
         return f'{self.title} {self.version}'
