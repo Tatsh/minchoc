@@ -252,8 +252,6 @@ class APIV2PackageView(View):
             new_package.version3 = int(version_split[3])
         except IndexError:
             pass
-        version_download_count = PackageVersionDownloadCount(count=0, version=new_package.version)
-        version_download_count.save()
         new_package.size = nuget_file.size
         new_package.file = File(nuget_file, nuget_file.name)  # type: ignore[assignment]
         uploader = NugetUser.objects.filter(token=request.headers['x-nuget-apikey']).first()
@@ -265,7 +263,6 @@ class APIV2PackageView(View):
             return HttpResponse(status=400)
         new_package.tags.add(*add_tags)
         new_package.authors.add(*add_authors)
-        new_package.version_download_count.add(version_download_count)
         return HttpResponse(status=201)
 
     def post(self, request: HttpRequest) -> HttpResponse:
