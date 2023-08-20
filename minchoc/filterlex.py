@@ -51,7 +51,3 @@ def t_string_error(t: lex.LexToken) -> None:
 
 
 lexer = lex.lex()
-
-# def find_column(input: str, token: lex.LexToken) -> int:
-#     line_start = input.rfind('\n', 0, token.lexpos) + 1
-#     return (token.lexpos - line_start) + 1
