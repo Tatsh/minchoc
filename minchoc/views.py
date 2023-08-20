@@ -1,4 +1,5 @@
 # pylint: disable=no-member
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -53,7 +54,7 @@ def home(_request: HttpRequest) -> HttpResponse:
 
 
 @require_http_methods(['GET'])
-def metadata(_request: HttpRequest, ending: str = '\n') -> HttpResponse:
+def metadata(_request: HttpRequest) -> HttpResponse:
     return HttpResponse(f'''
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <service xml:base="http://fixme/api/v2/"
@@ -64,7 +65,7 @@ def metadata(_request: HttpRequest, ending: str = '\n') -> HttpResponse:
         <atom:title>Default</atom:title>
         <collection href="Packages"><atom:title>Packages</atom:title></collection>
     </workspace>
-</service>{ending}''',
+</service>\n''',
                         content_type='application/xml')
 
 
@@ -119,17 +120,22 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
     if (sem_ver_level := request.GET.get('semVerLevel')):
         logger.warning(f'Ignoring semVerLevel={sem_ver_level}')
     proto = 'https' if request.is_secure() else 'http'
+    proto_host = f'{proto}://{request.get_host()}'
     try:
-        return HttpResponse('\n'.join(
-            make_entry(f'{proto}://{request.get_host()}', x)
-            for x in Package.objects.filter(nuget_id=request.GET['id'].replace('\'', ''))),
+        content = '\n'.join(
+            make_entry(proto_host, x)
+            for x in Package.objects.filter(nuget_id=request.GET['id'].replace('\'', '')))
+        return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
+            'BASEURL': proto_host,
+            'UPDATED': datetime.now().isoformat()
+        },
                             content_type='application/xml')
     except KeyError:
         return HttpResponse(status=400)
 
 
 @require_http_methods(['GET'])
-def packages(request: HttpRequest, ending: str = '\n') -> HttpResponse:
+def packages(request: HttpRequest) -> HttpResponse:
     filter_ = request.GET.get('$filter')
     order_by = request.GET.get('$orderby') or 'id'
     if (sem_ver_level := request.GET.get('semVerLevel')):
@@ -140,10 +146,14 @@ def packages(request: HttpRequest, ending: str = '\n') -> HttpResponse:
         logger.warning(f'Ignoring $top={top}')
     filters = filter_parser.parse(filter_) if filter_ else {}
     proto = 'https' if request.is_secure() else 'http'
+    proto_host = f'{proto}://{request.get_host()}'
     content = '\n'.join(
-        make_entry(f'{proto}://{request.get_host()}', x)
+        make_entry(proto_host, x)
         for x in Package.objects.order_by(order_by).filter(**filters)[0:20])
-    return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}{ending}',
+    return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
+        'BASEURL': proto_host,
+        'UPDATED': datetime.now().isoformat()
+    },
                         content_type='application/xml')
 
 
@@ -151,8 +161,12 @@ def packages(request: HttpRequest, ending: str = '\n') -> HttpResponse:
 def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpResponse:
     if (package := Package.objects.filter(nuget_id=name, version=version).first()):
         proto = 'https' if request.is_secure() else 'http'
-        content = make_entry(f'{proto}://{request.get_host()}', package)
-        return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n',
+        proto_host = f'{proto}://{request.get_host()}'
+        content = make_entry(proto_host, package)
+        return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
+            'BASEURL': proto_host,
+            'UPDATED': datetime.now().isoformat()
+        },
                             content_type='application/xml')
     return HttpResponseNotFound()
 
