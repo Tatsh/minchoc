@@ -10,7 +10,7 @@ import django_stubs_ext
 
 django_stubs_ext.monkeypatch()
 
-__all__ = ('Author', 'Company', 'NugetUser', 'Package', 'PackageVersionDownloadCount')
+__all__ = ('Author', 'Company', 'NugetUser', 'Package')
 
 
 class Company(models.Model):
