@@ -1,4 +1,4 @@
-# pylint: disable=no-member
+# pylint: disable=f-string-without-interpolation,no-member
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
