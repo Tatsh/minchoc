@@ -13,6 +13,7 @@ backoff
 basestring
 bootloader
 builtins
+choco
 classmethod
 cmdclass
 colenabled
