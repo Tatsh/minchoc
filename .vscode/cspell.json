@@ -70,7 +70,11 @@
     "_build/**",
     "build/**",
     "dist/**",
-    "htmlcov/**"
+    "htmlcov/**",
+    "minchoc/migrations/*.py",
+    "packages/**",
+    "parser.out",
+    "parsetab.py"
   ],
   "languageSettings": [
     {

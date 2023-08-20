@@ -26,7 +26,7 @@
     "fix-pluggy": "touch \"$(poetry run python -c 'import inspect, os, pluggy; print(os.path.dirname(inspect.getabsfile(pluggy)))')/py.typed\"",
     "format": "yarn prettier -w . && poetry run isort . && poetry run yapf -pri . && markdownlint-cli2 --fix '**/*.md' '#node_modules'",
     "mypy": "yarn fix-pluggy && poetry run mypy .",
-    "pylint": "poetry run pylint .",
+    "pylint": "poetry run pylint minchoc",
     "qa": "yarn mypy && yarn pylint && yarn check-spelling && yarn check-formatting",
     "test": "poetry run pytest"
   },

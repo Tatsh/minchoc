@@ -1,15 +1,14 @@
-# Human-Readable Project Name
+# Minimal Chocolatey-compatible NuGet server in a Django app
 
-Short description of project for PyPI etc.
+See above.
 
 ## Installation
 
 ```shell
-pip install minchoc
+pip install django-minchoc
 ```
 
-## Command line usage
-
-```shell
-minchoc
+```python
+ALLOW_PACKAGE_DELETION = False
+WANT_NUGET_HOME = True
 ```

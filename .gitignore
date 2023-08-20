@@ -1,9 +1,14 @@
+*pgpass*
 /.coverage
 /.directory
 /.pytest_cache/
 /MANIFEST
 /build/
 /dist/
+/django_base/
 /htmlcov/
 /node_modules/
+/packages/
 /yarn-error.log
+manage.py
+parser.out
