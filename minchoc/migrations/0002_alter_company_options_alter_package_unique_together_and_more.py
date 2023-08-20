@@ -12,7 +12,10 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='company',
-            options={'verbose_name': 'company', 'verbose_name_plural': 'companies'},
+            options={
+                'verbose_name': 'company',
+                'verbose_name_plural': 'companies'
+            },
         ),
         migrations.AlterUniqueTogether(
             name='package',
@@ -20,13 +23,12 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='package',
-            constraint=models.UniqueConstraint(fields=('nuget_id', 'version'), name='id_and_version_uniq'),
+            constraint=models.UniqueConstraint(fields=('nuget_id', 'version'),
+                                               name='id_and_version_uniq'),
         ),
         migrations.RemoveField(
             model_name='package',
             name='version_download_count',
         ),
-        migrations.DeleteModel(
-            name='PackageVersionDownloadCount',
-        ),
+        migrations.DeleteModel(name='PackageVersionDownloadCount',),
     ]
