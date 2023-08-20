@@ -1,5 +1,5 @@
 # pylint: disable=invalid-str-returned,no-member
-from typing import Any
+from typing import Any, cast
 import uuid
 
 from django.conf import settings
@@ -20,7 +20,7 @@ class Company(models.Model):
 
     name = models.CharField(max_length=255, unique=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -31,8 +31,8 @@ class NugetUser(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
     token = models.UUIDField()
 
-    def __str__(self):
-        return self.base.username
+    def __str__(self) -> str:
+        return cast(str, self.base.username)
 
 
 def post_save_receiver(
@@ -53,9 +53,9 @@ class PackageVersionDownloadCount(models.Model):
     count = models.PositiveBigIntegerField()
     version = models.CharField(max_length=128)
 
-    def __str__(self):
-        s = '1 download' if self.count == 1 else f'{self.count} downloads'
-        return f'{self.version}: {s}'
+    def __str__(self) -> str:
+        label = '1 download' if self.count == 1 else f'{self.count} downloads'
+        return f'{self.version}: {label}'
 
 
 class Author(models.Model):
@@ -109,7 +109,8 @@ class Package(models.Model):
     version2 = models.PositiveIntegerField(null=True)
     version3 = models.PositiveIntegerField(null=True)
     version_beta = models.CharField(max_length=128, null=True)
-    version_download_count = models.ManyToManyField(PackageVersionDownloadCount)
+    version_download_count = models.ManyToManyField(
+        PackageVersionDownloadCount)  # type: ignore[var-annotated]
 
     def __str__(self) -> str:
         return f'{self.title} {self.version}'
