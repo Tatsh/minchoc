@@ -28,10 +28,10 @@ def post_save_receiver(
         sender: AbstractUser,  # pylint: disable=unused-argument
         instance: AbstractUser,
         **kwargs: Any) -> None:
-    nuget_user = NugetUser()
-    nuget_user.base = instance
-    nuget_user.token = uuid.uuid4()
-    nuget_user.save()
+    nuget_user, exists = NugetUser.objects.get_or_create(base=instance)  # pylint: disable=no-member
+    if not exists:
+        nuget_user.token = uuid.uuid4()
+        nuget_user.save()
 
 
 post_save.connect(post_save_receiver, sender=settings.AUTH_USER_MODEL)
