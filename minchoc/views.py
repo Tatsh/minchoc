@@ -168,6 +168,10 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
         if request.method == 'GET':
             with package.file.open('rb') as f:
                 package.download_count += 1
+                version_count = package.version_download_count.filter(version=version).first()
+                assert version_count is not None
+                version_count.count += 1
+                version_count.save()
                 package.save()
                 return HttpResponse(f.read(), content_type='application/zip')
         if request.method == 'DELETE' and settings.ALLOW_PACKAGE_DELETION:
@@ -253,7 +257,6 @@ class APIV2PackageView(View):
         version_download_count.save()
         new_package.size = nuget_file.size
         new_package.file = File(nuget_file, nuget_file.name)  # type: ignore[assignment]
-        new_package.version_download_count = version_download_count
         uploader = NugetUser.objects.filter(token=request.headers['x-nuget-apikey']).first()
         assert uploader is not None
         new_package.uploader = uploader
@@ -263,6 +266,7 @@ class APIV2PackageView(View):
             return HttpResponse(status=400)
         new_package.tags.add(*add_tags)
         new_package.authors.add(*add_authors)
+        new_package.version_download_count.add(version_download_count)
         return HttpResponse(status=201)
 
     def post(self, request: HttpRequest) -> HttpResponse:

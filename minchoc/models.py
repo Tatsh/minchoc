@@ -1,3 +1,4 @@
+# pylint: disable=invalid-str-returned,no-member
 from typing import Any
 import uuid
 
@@ -13,7 +14,14 @@ __all__ = ('Author', 'Company', 'NugetUser', 'Package', 'PackageVersionDownloadC
 
 
 class Company(models.Model):
+    class Meta:
+        verbose_name = 'company'
+        verbose_name_plural = 'companies'
+
     name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
 
 
 class NugetUser(models.Model):
@@ -23,13 +31,17 @@ class NugetUser(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
     token = models.UUIDField()
 
+    def __str__(self):
+        return self.base.username
+
 
 def post_save_receiver(
         sender: AbstractUser,  # pylint: disable=unused-argument
         instance: AbstractUser,
         **kwargs: Any) -> None:
-    nuget_user, exists = NugetUser.objects.get_or_create(base=instance)  # pylint: disable=no-member
-    if not exists:
+    if not NugetUser.objects.filter(base=instance).exists():
+        nuget_user = NugetUser()
+        nuget_user.base = instance
         nuget_user.token = uuid.uuid4()
         nuget_user.save()
 
@@ -41,19 +53,23 @@ class PackageVersionDownloadCount(models.Model):
     count = models.PositiveBigIntegerField()
     version = models.CharField(max_length=128)
 
+    def __str__(self):
+        s = '1 download' if self.count == 1 else f'{self.count} downloads'
+        return f'{self.version}: {s}'
+
 
 class Author(models.Model):
     """Author of the software, not the nuget spec."""
     name = models.CharField(max_length=255, unique=True)
 
-    def __str__(self) -> str:  # pylint: disable=invalid-str-returned
+    def __str__(self) -> str:
         return self.name
 
 
 class Tag(models.Model):
     name = models.CharField(max_length=128, unique=True)
 
-    def __str__(self) -> str:  # pylint: disable=invalid-str-returned
+    def __str__(self) -> str:
         return self.name
 
 
@@ -85,7 +101,6 @@ class Package(models.Model):
     source_url = models.URLField(null=True)
     summary = models.TextField(null=True)
     tags = models.ManyToManyField(Tag)  # type: ignore[var-annotated]
-    target_framework = models.CharField(max_length=255, null=True)
     title = models.CharField(max_length=255)
     uploader = models.ForeignKey(NugetUser, on_delete=models.CASCADE)
     version = models.CharField(max_length=128)
@@ -94,8 +109,7 @@ class Package(models.Model):
     version2 = models.PositiveIntegerField(null=True)
     version3 = models.PositiveIntegerField(null=True)
     version_beta = models.CharField(max_length=128, null=True)
-    version_download_count = models.ForeignKey(PackageVersionDownloadCount,
-                                               on_delete=models.CASCADE)
+    version_download_count = models.ManyToManyField(PackageVersionDownloadCount)
 
-    def __str__(self) -> str:  # pylint: disable=invalid-str-returned
-        return self.title
+    def __str__(self) -> str:
+        return f'{self.title} {self.version}'
