@@ -167,6 +167,8 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
     if (package := Package.objects.filter(nuget_id=name, version=version).first()):
         if request.method == 'GET':
             with package.file.open('rb') as f:
+                package.download_count += 1
+                package.save()
                 return HttpResponse(f.read(), content_type='application/zip')
         if request.method == 'DELETE' and settings.ALLOW_PACKAGE_DELETION:
             if not is_authorized(request):
