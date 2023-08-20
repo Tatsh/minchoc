@@ -5,10 +5,11 @@ See above.
 ## Installation
 
 ```shell
-pip install django-minchoc
+pip install minchoc
 ```
 
 ```python
+INSTALLED_APPS = ['minchoc']
 ALLOW_PACKAGE_DELETION = False
-WANT_NUGET_HOME = True
+WANT_NUGET_HOME = False
 ```
