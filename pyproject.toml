@@ -57,6 +57,7 @@ combine_as_imports = true
 from_first = true
 line_length = 100
 order_by_type = true
+skip_gitignore = true
 use_parentheses = true
 
 [tool.mypy]
@@ -95,6 +96,7 @@ load-plugins = [
   "pylint.extensions.set_membership",
   "pylint_quotes"
 ]
+recursive = true
 
 [tool.pylint.basic]
 class-attribute-naming-style = "snake_case"
@@ -117,6 +119,8 @@ logging-modules = ["logging", "loguru"]
 
 [tool.pylint."messages control"]
 disable = [
+  "invalid-docstring-quote",
+  "invalid-triple-quote",
   "magic-value-comparison",
   "missing-class-docstring",
   "missing-function-docstring",
