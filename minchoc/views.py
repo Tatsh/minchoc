@@ -274,6 +274,7 @@ class APIV2PackageView(View):
         try:
             new_package.save()
         except IntegrityError:
+            logger.error('Integrity error (has this already been uploaded?)')
             return HttpResponse(status=400)
         new_package.tags.add(*add_tags)
         new_package.authors.add(*add_authors)
