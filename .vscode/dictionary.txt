@@ -44,6 +44,7 @@ escapedquote
 etree
 excinfo
 execfile
+exitstatus
 filterlex
 filteryacc
 flabel
@@ -127,6 +128,7 @@ rtfd
 rtorrent
 rutorrent
 selfpromo
+sessionfinish
 setenv
 setitem
 setsettings
