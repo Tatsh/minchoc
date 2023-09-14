@@ -21,9 +21,8 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 django-types = "^0.17.0"
 mypy = "^1.5.1"
-pylint = "^2.17.5"
-pylint-quotes = "^0.2.3"
 rope = "^1.9.0"
+ruff = "^0.0.289"
 toml = "^0.10.2"
 types-toml = "^0.10.8.7"
 yapf = "^0.40.1"
@@ -45,7 +44,9 @@ optional = true
 coveralls = "^3.3.1"
 mock = "^5.1.0"
 pytest = "^7.4.0"
+pytest-django = "^4.5.2"
 pytest-mock = "^3.11.1"
+pytest-cov = "^4.1.0"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
@@ -77,87 +78,39 @@ warn_return_any = true
 warn_unreachable = true
 warn_unused_ignores = true
 
-[tool.pylint.main]
-ignore = [".git", ".stubs", "node_modules", "minchoc/migrations"]
-load-plugins = [
-  "pylint.extensions.bad_builtin",
-  "pylint.extensions.check_elif",
-  "pylint.extensions.code_style",
-  "pylint.extensions.comparison_placement",
-  "pylint.extensions.consider_refactoring_into_while_condition",
-  "pylint.extensions.consider_ternary_expression",
-  "pylint.extensions.docparams",
-  "pylint.extensions.empty_comment",
-  "pylint.extensions.eq_without_hash",
-  "pylint.extensions.for_any_all",
-  "pylint.extensions.magic_value",
-  "pylint.extensions.overlapping_exceptions",
-  "pylint.extensions.redefined_loop_name",
-  "pylint.extensions.set_membership",
-  "pylint_quotes"
-]
-recursive = true
-
-[tool.pylint.basic]
-class-attribute-naming-style = "snake_case"
-good-names = ["e", "f", "g", "i", "id", "j", "k", "m", "n", "p", "r", "t", "x", "y", "z"]
-include-naming-hint = true
-inlinevar-naming-style = "snake_case"
-
-[tool.pylint.design]
-max-args = 8
-max-branches = 15
-max-locals = 30
-max-statements = 80
-
-[tool.pylint.format]
-expected-line-ending-format = "LF"
-
-[tool.pylint.logging]
-logging-format-style = "new"
-logging-modules = ["logging", "loguru"]
-
-[tool.pylint."messages control"]
-disable = [
-  "invalid-docstring-quote",
-  "invalid-triple-quote",
-  "magic-value-comparison",
-  "missing-class-docstring",
-  "missing-function-docstring",
-  "missing-module-docstring",
-  "too-few-public-methods",
-  "too-many-branches",
-  "too-many-instance-attributes",
-  "too-many-return-statements",
-  "unspecified-encoding",
-  "use-dict-literal"
-]
-enable = [
-  "bad-builtin",
-  "consider-refactoring-into-while-condition",
-  "consider-ternary-expression",
-  "consider-using-assignment-expr",
-  "else-if-used",
-  "empty-comment",
-  "eq-without-hash",
-  "misplaced-comparison-constant",
-  "overlapping-except",
-  "redefined-loop-name",
-  "use-set-for-membership",
-  "useless-type-doc"
-]
-
-[tool.pylint.parameter_documentation]
-default-docstring-type = "numpy"
-
-[tool.pylint.refactoring]
-max-nested-blocks = 6
-
 [tool.pytest.ini_options]
+django_find_project = false
 mock_use_standalone_module = true
 
 [tool.rstcheck]
 ignore_directives = "automodule"
+
+[tool.ruff]
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "parsetab.py",
+  "venv"
+]
+line-length = 100
 
 [tool.yapf]
 align_closing_bracket_with_visual_indent = true
