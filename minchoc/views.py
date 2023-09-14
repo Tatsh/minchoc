@@ -1,4 +1,3 @@
-# pylint: disable=f-string-without-interpolation,no-member
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -11,7 +10,8 @@ from django.conf import settings
 from django.core.files import File
 from django.db import IntegrityError
 from django.db.models import Sum
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound
+from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, JsonResponse
+from django.http.multipartparser import MultiPartParserError
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -45,7 +45,7 @@ NUSPEC_FIELD_MAPPINGS = {
     NUSPEC_FIELD_TITLE: 'title',
     NUSPEC_FIELD_VERSION: 'version'
 }
-PACKAGE_FIELDS = {f.name: f for f in Package._meta.get_fields()}  # pylint: disable=protected-access
+PACKAGE_FIELDS = {f.name: f for f in Package._meta.get_fields()}
 
 
 @require_http_methods(['GET'])
@@ -55,7 +55,7 @@ def home(_request: HttpRequest) -> HttpResponse:
 
 @require_http_methods(['GET'])
 def metadata(_request: HttpRequest) -> HttpResponse:
-    return HttpResponse(f'''
+    return HttpResponse('''
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <service xml:base="http://fixme/api/v2/"
                         xmlns:atom="http://www.w3.org/2005/Atom"
@@ -74,14 +74,18 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
         total_downloads=Sum('download_count'))['total_downloads']
     return f'''<entry>
     <id>{host}/api/v2/Packages(Id='{package.nuget_id}',Version='{package.version}')</id>
-    <category term="NuGetGallery.V2FeedPackage" scheme="http://schemas.microsoft.com/ado/2007/08/dataservices/scheme" />
-    <link rel="edit" title="V2FeedPackage" href="Packages(Id='{package.nuget_id}',Version='{package.version}')" />
+    <category term="NuGetGallery.V2FeedPackage"
+        scheme="http://schemas.microsoft.com/ado/2007/08/dataservices/scheme" />
+    <link rel="edit" title="V2FeedPackage"
+        href="Packages(Id='{package.nuget_id}',Version='{package.version}')" />
     <title type="text">{package.nuget_id}</title>
     <summary type="text">{package.nuget_id}</summary>
     <updated>{package.published.isoformat()}</updated>
     <author><name>{package.authors.first() or ''}</name></author>
-    <link rel="edit-media" title="V2FeedPackage" href="Packages(Id='{package.nuget_id}',Version='{package.version}')/$value" />
-    <content type="application/zip" src="{host}/api/v2/package/{package.nuget_id}/{package.version}" />
+    <link rel="edit-media" title="V2FeedPackage"
+        href="Packages(Id='{package.nuget_id}',Version='{package.version}')/$value" />
+    <content type="application/zip"
+        src="{host}/api/v2/package/{package.nuget_id}/{package.version}" />
     <m:properties xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
                   xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices">
         <d:Copyright>{package.copyright or ''}</d:Copyright>
@@ -189,7 +193,7 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
                 return HttpResponse(f.read(), content_type='application/zip')
         if request.method == 'DELETE' and settings.ALLOW_PACKAGE_DELETION:
             if not is_authorized(request):
-                return HttpResponse(status=403)
+                return JsonResponse({'error': 'Not authorized'}, status=403)
             package.file.delete()
             package.delete()
             return HttpResponse(status=204)
@@ -200,30 +204,36 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
 class APIV2PackageView(View):
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         if not is_authorized(request):
-            return HttpResponse(status=403)
+            return JsonResponse({'error': 'Not authorized'}, status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def put(self, request: HttpRequest) -> HttpResponse:
-        if not request.content_type or not request.content_type.startswith('multipart'):
-            logger.error(f'Invalid content type: {request.content_type}')
-            return HttpResponse(status=400)
+        if not request.content_type or not request.content_type.startswith('multipart/'):
+            return JsonResponse(
+                {'error': f'Invalid content type: {request.content_type or "unknown"}'}, status=400)
         # These 2 lines must exist. Combining into 1 does not work
-        _, files = request.parse_file_upload(request.META, request)
+        try:
+            _, files = request.parse_file_upload(request.META, request)
+        except MultiPartParserError:
+            return JsonResponse({'error': 'Invalid upload'}, status=400)
         request.FILES.update(files)
         if len(request.FILES) == 0:
-            logger.error('No files sent')
-            return HttpResponse(status=400)
+            return JsonResponse({'error': 'No files sent'}, status=400)
         if len(request.FILES) > 1:
-            logger.error('More than file sent')
-            return HttpResponse(status=400)
+            return JsonResponse({'error': 'More than one file sent'}, status=400)
         nuget_file = list(request.FILES.values())[0]
         if not zipfile.is_zipfile(nuget_file):
-            logger.error('Not a zip file')
-            return HttpResponse(status=400)
+            return JsonResponse({'error': 'Not a zip file'}, status=400)
         with zipfile.ZipFile(nuget_file) as z:
             nuspecs = [x for x in z.filelist if x.filename.endswith('.nuspec')]
             if len(nuspecs) > 1 or not nuspecs:
-                return HttpResponse(status=400)
+                return JsonResponse(
+                    {
+                        'error':
+                            'There should be exactly 1 nuspec file present. 0 or more than 1 were '
+                            'found.'
+                    },
+                    status=400)
             with TemporaryDirectory(suffix='.nuget-parse') as temp_dir:
                 z.extract(nuspecs[0], temp_dir)
                 root = parse_xml(Path(temp_dir) / nuspecs[0].filename).getroot()
@@ -274,8 +284,8 @@ class APIV2PackageView(View):
         try:
             new_package.save()
         except IntegrityError:
-            logger.error('Integrity error (has this already been uploaded?)')
-            return HttpResponse(status=400)
+            return JsonResponse({'error': 'Integrity error (has this already been uploaded?)'},
+                                status=400)
         new_package.tags.add(*add_tags)
         new_package.authors.add(*add_authors)
         return HttpResponse(status=201)

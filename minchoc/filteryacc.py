@@ -3,7 +3,7 @@ from typing import Any, cast
 from ply import yacc
 from ply.lex import LexToken
 
-from minchoc.filterlex import tokens  # pylint: disable=unused-import
+from minchoc.filterlex import tokens
 
 __all__ = ('parser',)
 

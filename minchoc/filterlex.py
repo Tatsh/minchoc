@@ -1,4 +1,3 @@
-# pylint: disable=invalid-string-quote
 from typing import Any
 
 from ply import lex
@@ -8,7 +7,6 @@ __all__ = ('tokens',)
 states = (('string', 'exclusive'),)
 tokens = ('AND', 'EQ', 'ISLATESTVERSION', 'LPAREN', 'RPAREN', 'STRING', 'TOLOWER_ID')
 
-# pylint: disable=invalid-name
 t_AND = r'and'
 t_EQ = r'eq'
 t_ISLATESTVERSION = r'IsLatestVersion'
@@ -18,7 +16,6 @@ t_RPAREN = r'\)'
 
 t_ignore = ' '
 t_string_ignore = ' '
-# pylint: enable=invalid-name
 
 
 def t_error(t: Any) -> None:

@@ -1,4 +1,3 @@
-# pylint: disable=invalid-str-returned,no-member
 from typing import Any, cast
 import uuid
 
@@ -36,7 +35,7 @@ class NugetUser(models.Model):
 
 
 def post_save_receiver(
-        sender: AbstractUser,  # pylint: disable=unused-argument
+        sender: AbstractUser,
         instance: AbstractUser,
         **kwargs: Any) -> None:
     if not NugetUser.objects.filter(base=instance).exists():

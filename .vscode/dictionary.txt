@@ -29,6 +29,7 @@ dedented
 defusedxml
 delslice
 dets
+direnv
 distutils
 docparams
 docstrings
@@ -110,7 +111,9 @@ ptrackers
 pycache
 pylance
 pylint
+pypackages
 pytest
+pytype
 ratelimit
 rcfile
 rdiv
@@ -156,6 +159,7 @@ unichr
 unidecode
 urllib
 valign
+venv
 virtualenvs
 vsplit
 webui
