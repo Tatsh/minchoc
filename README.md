@@ -1,6 +1,8 @@
 # Minimal Chocolatey-compatible NuGet server in a Django app
 
-See above.
+[![QA](https://github.com/Tatsh/minchoc/actions/workflows/qa.yml/badge.svg)](https://github.com/Tatsh/minchoc/actions/workflows/qa.yml)
+[![Tests](https://github.com/Tatsh/minchoc/actions/workflows/tests.yml/badge.svg)](https://github.com/Tatsh/minchoc/actions/workflows/tests.yml)
+[![Coverage Status](https://coveralls.io/repos/github/Tatsh/minchoc/badge.svg?branch=master)](https://coveralls.io/github/Tatsh/minchoc?branch=master)
 
 ## Installation
 
@@ -11,8 +13,10 @@ pip install minchoc
 ```python
 INSTALLED_APPS = ['minchoc']
 ALLOW_PACKAGE_DELETION = False
-WANT_NUGET_HOME = False
 ```
+
+A `DELETE` call to `/api/v2/package/<id>/<version>` will be denied even with authentication unless
+`ALLOW_PACKAGE_DELETION` is set to `True`.
 
 ## Notes
 
