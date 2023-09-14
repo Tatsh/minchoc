@@ -12,7 +12,6 @@ python = ">=3.10,<4"
 defusedxml = "^0.7.1"
 django = "^4.2.4"
 django-stubs-ext = "^4.2.2"
-loguru = "^0.7.0"
 ply = "^3.11"
 
 [tool.poetry.group.dev]
