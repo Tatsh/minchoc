@@ -10,7 +10,6 @@ from defusedxml.ElementTree import parse as parse_xml
 from django.conf import settings
 from django.core.files import File
 from django.db import IntegrityError
-from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, JsonResponse
 from django.http.multipartparser import MultiPartParserError
 from django.utils.decorators import method_decorator
@@ -21,6 +20,7 @@ from django.views.decorators.http import require_http_methods
 from .constants import FEED_XML_POST, FEED_XML_PRE
 from .filteryacc import parser as filter_parser
 from .models import Author, NugetUser, Package, Tag
+from .utils import is_authorized, make_entry
 
 NUSPEC_XSD_URI_PREFIX = '{http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd}'
 NUSPEC_FIELD_AUTHORS = f'{NUSPEC_XSD_URI_PREFIX}authors'
@@ -52,11 +52,13 @@ logger = logging.getLogger(__name__)
 
 @require_http_methods(['GET'])
 def home(_request: HttpRequest) -> HttpResponse:
+    """Static homepage."""
     return HttpResponse('{}', content_type='application/json')
 
 
 @require_http_methods(['GET'])
 def metadata(_request: HttpRequest) -> HttpResponse:
+    """Static page at ``/$metadata`` and at ``/api/v2/$metadata``."""
     return HttpResponse('''
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <service xml:base="http://fixme/api/v2/"
@@ -71,58 +73,13 @@ def metadata(_request: HttpRequest) -> HttpResponse:
                         content_type='application/xml')
 
 
-def make_entry(host: str, package: Package, ending: str = '\n') -> str:
-    total_downloads = Package.objects.filter(nuget_id=package.nuget_id).aggregate(
-        total_downloads=Sum('download_count'))['total_downloads']
-    return f'''<entry>
-    <id>{host}/api/v2/Packages(Id='{package.nuget_id}',Version='{package.version}')</id>
-    <category term="NuGetGallery.V2FeedPackage"
-        scheme="http://schemas.microsoft.com/ado/2007/08/dataservices/scheme" />
-    <link rel="edit" title="V2FeedPackage"
-        href="Packages(Id='{package.nuget_id}',Version='{package.version}')" />
-    <title type="text">{package.nuget_id}</title>
-    <summary type="text">{package.nuget_id}</summary>
-    <updated>{package.published.isoformat()}</updated>
-    <author><name>{package.authors.first() or ''}</name></author>
-    <link rel="edit-media" title="V2FeedPackage"
-        href="Packages(Id='{package.nuget_id}',Version='{package.version}')/$value" />
-    <content type="application/zip"
-        src="{host}/api/v2/package/{package.nuget_id}/{package.version}" />
-    <m:properties xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
-                  xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices">
-        <d:Copyright>{package.copyright or ''}</d:Copyright>
-        <d:Dependencies></d:Dependencies>
-        <d:Description>{package.description or ''}</d:Description>
-        <d:DownloadCount m:type="Edm.Int32">{total_downloads}</d:DownloadCount>
-        <d:GalleryDetailsUrl>{host}/package/{package.nuget_id}/{package.version}</d:GalleryDetailsUrl>
-        <d:IconUrl>{package.icon_url or ''}</d:IconUrl>
-        <d:IsAbsoluteLatestVersion m:type="Edm.Boolean">{'true' if package.is_absolute_latest_version else 'false'}</d:IsAbsoluteLatestVersion>
-        <d:IsApproved m:type="Edm.Boolean">true</d:IsApproved>
-        <d:IsLatestVersion m:type="Edm.Boolean">{'true' if package.is_latest_version else 'false'}</d:IsLatestVersion>
-        <d:IsPrerelease m:type="Edm.Boolean">{'true' if package.is_prerelease else 'false'}</d:IsPrerelease>
-        <d:Language m:null="true" />
-        <d:LastEdited m:type="Edm.DateTime" m:null="true" />
-        <d:LicenseNames m:null="true" />
-        <d:LicenseReportUrl m:null="true" />
-        <d:LicenseUrl>{package.license_url or ''}</d:LicenseUrl>
-        <d:PackageHash>{package.hash or ''}</d:PackageHash>
-        <d:PackageHashAlgorithm>{package.hash_algorithm or ''}</d:PackageHashAlgorithm>
-        <d:PackageSize m:type="Edm.Int64">{package.size}</d:PackageSize>
-        <d:ProjectUrl>{package.project_url}</d:ProjectUrl>
-        <d:Published m:type="Edm.DateTime">{package.published.isoformat()}</d:Published>
-        <d:ReleaseNotes>{package.release_notes or ''}</d:ReleaseNotes>
-        <d:RequireLicenseAcceptance m:type="Edm.Boolean">{'true' if package.require_license_acceptance else 'false'}</d:RequireLicenseAcceptance>
-        <d:Summary>{package.summary or ''}</d:Summary>
-        <d:Tags xml:space="preserve"> {' '.join(x.name for x in package.tags.all())} </d:Tags>
-        <d:Title>{package.title}</d:Title>
-        <d:Version>{package.version}</d:Version>
-        <d:VersionDownloadCount m:type="Edm.Int32">{package.download_count}</d:VersionDownloadCount>
-    </m:properties>
-</entry>{ending}'''  # noqa: E501
-
-
 @require_http_methods(['GET'])
 def find_packages_by_id(request: HttpRequest) -> HttpResponse:
+    """
+    Takes a ``GET`` request to find packages.
+
+    Sample URL: ``/FindPackagesById()?id=package-name``
+    """
     if (sem_ver_level := request.GET.get('semVerLevel')):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
     proto = 'https' if request.is_secure() else 'http'
@@ -142,6 +99,12 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
 
 @require_http_methods(['GET'])
 def packages(request: HttpRequest) -> HttpResponse:
+    """
+    Takes a ``GET`` request to find packages. Query parameters `$skip`, `$top` and `semVerLevel` are
+    ignored.
+
+    Sample URL: ``/Packages()?$orderby=id&$filter=(tolower(Id) eq 'package-name') and IsLatestVersion&$skip=0&$top=1``
+    """  # noqa: E501
     filter_ = request.GET.get('$filter')
     order_by = request.GET.get('$orderby') or 'id'
     if (sem_ver_level := request.GET.get('semVerLevel')):
@@ -168,6 +131,11 @@ def packages(request: HttpRequest) -> HttpResponse:
 
 @require_http_methods(['GET'])
 def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpResponse:
+    """
+    Alternate `Packages()` with arguments to find a single package instance.
+
+    Sample URL: ``/Packages(Id='name',Version='123.0.0')``
+    """
     if (package := Package.objects.filter(nuget_id=name, version=version).first()):
         proto = 'https' if request.is_secure() else 'http'
         proto_host = f'{proto}://{request.get_host()}'
@@ -180,16 +148,17 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
     return HttpResponseNotFound()
 
 
-def is_authorized(request: HttpRequest) -> bool:
-    try:
-        return NugetUser.objects.filter(token=request.headers['X-NuGet-ApiKey']).exists()
-    except KeyError:
-        return False
-
-
 @require_http_methods(['GET', 'DELETE'])
 @csrf_exempt
 def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpResponse:
+    """
+    Get the .nuget file for a package instance.
+
+    Sample URL: ``/api/package/name/123.0.0``
+
+    This also handles deletions. Deletions will only be allowed with authentication and with
+    ``settings.ALLOW_PACKAGE_DELETION`` set to ``True``.
+    """
     if (package := Package.objects.filter(nuget_id=name, version=version).first()):
         if request.method == 'GET':
             with package.file.open('rb') as f:
@@ -210,11 +179,13 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
 @method_decorator(csrf_exempt, name='dispatch')
 class APIV2PackageView(View):
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        """Checks if a user is authorised before allowing the request to continue."""
         if not is_authorized(request):
             return JsonResponse({'error': 'Not authorized'}, status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def put(self, request: HttpRequest) -> HttpResponse:
+        """Upload a package. This must be a multipart upload with a single valid .nuget file."""
         if not request.content_type or not request.content_type.startswith('multipart/'):
             return JsonResponse(
                 {'error': f'Invalid content type: {request.content_type or "unknown"}'}, status=400)
@@ -297,4 +268,5 @@ class APIV2PackageView(View):
         return HttpResponse(status=201)
 
     def post(self, request: HttpRequest) -> HttpResponse:
+        """POST is an alias for PUT."""
         return self.put(request)

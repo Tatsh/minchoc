@@ -1,3 +1,4 @@
+*.pyc
 *pgpass*
 /.coverage
 /.directory
@@ -11,5 +12,6 @@
 /node_modules/
 /packages/
 /yarn-error.log
+__pycache__/
 manage.py
 parser.out

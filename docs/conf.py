@@ -8,6 +8,8 @@ from typing import Final
 import os
 import sys
 
+from django.conf import settings
+import django
 import toml
 
 with open(f'{dirname(__file__)}/../pyproject.toml') as f:
@@ -54,3 +56,9 @@ The theme to use for HTML and HTML Help pages.  See the documentation for a
 list of builtin themes.
 '''
 html_theme: Final[str] = 'alabaster'
+
+settings.configure(INSTALLED_APPS=[
+    'django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
+    'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles', 'minchoc'
+])
+django.setup()

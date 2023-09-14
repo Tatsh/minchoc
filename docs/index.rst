@@ -1,28 +1,14 @@
-Human-Readable Project Name
-=====================================
+Minimal Chocolatey-compatible NuGet server in a Django app
+==========================================================
 
-
-Commands
---------
-
-.. click:: instagram_archiver.main:main
-  :prog: ia
-  :nested: full
-
-
-Library
--------
-.. automodule:: minchoc.name_of_module
+Views
+-----
+.. automodule:: minchoc.views
    :members:
 
-Submodule
+Utilities
 ---------
-.. automodule:: minchoc.submodule
-   :members:
-
-Typing
-------
-.. automodule:: minchoc.typing
+.. automodule:: minchoc.utils
    :members:
 
 .. toctree::
