@@ -45,6 +45,7 @@ etree
 excinfo
 execfile
 exitstatus
+fakename
 filterlex
 filteryacc
 flabel
@@ -136,6 +137,7 @@ setslice
 setuptools
 shortcode
 sindex
+somename
 speedintitle
 speedlistdl
 speedlistul
@@ -169,6 +171,7 @@ writeautomaticsub
 writeinfojson
 writesubtitles
 writethumbnail
+wsgi
 xirvik
 xrange
 xreadlines

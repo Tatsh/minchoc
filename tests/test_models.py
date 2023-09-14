@@ -4,13 +4,13 @@ from minchoc.models import Company, NugetUser, Package, Tag
 
 
 @pytest.mark.django_db
-def test_company_str():
+def test_company_str() -> None:
     company = Company.objects.create(name='Company name')
     assert str(company) == 'Company name'
 
 
 @pytest.mark.django_db
-def test_tag_str():
+def test_tag_str() -> None:
     tag = Tag.objects.create(name='Tag name')
     assert str(tag) == 'Tag name'
 

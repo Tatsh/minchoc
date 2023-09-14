@@ -1,9 +1,10 @@
-import re
 from tempfile import NamedTemporaryFile
+import re
+import zipfile
+
 from django.conf import settings
 from django.test import Client
 import pytest
-import zipfile
 
 from minchoc.models import NugetUser, Package
 
@@ -154,7 +155,7 @@ content-type: application/zip\r
                            headers={
                                'content-length': f'{len(content)}',
                                'x-nuget-apikey': nuget_user.token.hex
-                           })  # type: ignore[arg-type])
+                           })  # type: ignore[arg-type]
     assert (response.json()['error'] ==
             'There should be exactly 1 nuspec file present. 0 or more than 1 were found.')
     assert response.status_code == 400
@@ -196,7 +197,7 @@ content-type: application/zip\r
                           headers={
                               'content-length': f'{len(content)}',
                               'x-nuget-apikey': nuget_user.token.hex
-                          })  # type: ignore[arg-type])
+                          })  # type: ignore[arg-type]
     assert response.status_code == 201
     # response = client.post('/api/v2/package/',
     #                        content,
