@@ -116,7 +116,7 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
         <d:Version>{package.version}</d:Version>
         <d:VersionDownloadCount m:type="Edm.Int32">{package.download_count}</d:VersionDownloadCount>
     </m:properties>
-</entry>{ending}'''
+</entry>{ending}'''  # noqa: E501
 
 
 @require_http_methods(['GET'])
