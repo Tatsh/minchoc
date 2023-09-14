@@ -34,10 +34,7 @@ class NugetUser(models.Model):
         return cast(str, self.base.username)
 
 
-def post_save_receiver(
-        sender: AbstractUser,
-        instance: AbstractUser,
-        **kwargs: Any) -> None:
+def post_save_receiver(sender: AbstractUser, instance: AbstractUser, **kwargs: Any) -> None:
     if not NugetUser.objects.filter(base=instance).exists():
         nuget_user = NugetUser()
         nuget_user.base = instance

@@ -8,7 +8,7 @@ import os
 from django.conf import settings
 import pytest
 
-DJANGO_APP_DIR = Path(f'testdjango{uuid4().hex}')
+DJANGO_APP_DIR = Path(f'test_django{uuid4().hex}')
 
 pytest_plugins = ['tests.fixtures']
 

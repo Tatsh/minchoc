@@ -6,6 +6,7 @@ import pytest
 @pytest.fixture
 def nuget_user() -> Iterator[Any]:
     from django.contrib.auth.models import User
+
     from minchoc.models import NugetUser
     user = User.objects.create()
     assert user is not None
