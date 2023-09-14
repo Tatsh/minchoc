@@ -1,11 +1,22 @@
 [tool.poetry]
 name = "minchoc"
-version = "0.0.6"
+version = "0.0.7"
 authors = ["Andrew Udvare <audvare@gmail.com>"]
-description = "Short description of project for PyPI etc."
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Intended Audience :: Developers",
+    "Topic :: System :: Software Distribution",
+    "Typing :: Typed"
+]
+description = "Minimal Chocolatey-compatible NuGet server in a Django app."
+documentation = "https://minchoc.readthedocs.io/en/latest/"
+keywords = ["chocolatey", "django", "windows"]
 license = "MIT"
 packages = [{ include = "minchoc" }]
 readme = "README.md"
+repository = "https://github.com/Tatsh/minchoc"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4"
