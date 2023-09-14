@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.urls import path
 
 from . import views
@@ -14,7 +13,5 @@ urlpatterns = [
     path('api/v2/$metadata', views.metadata),
     path('api/v2/package/<name>/<version>', views.fetch_package_file),
     path('api/v2/package/', views.APIV2PackageView.as_view()),
+    path('', views.home)
 ]
-
-if settings.WANT_NUGET_HOME:
-    urlpatterns.append(path('', views.home))

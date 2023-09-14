@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
+import logging
 import re
 import zipfile
 
@@ -16,7 +17,6 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from loguru import logger
 
 from .constants import FEED_XML_POST, FEED_XML_PRE
 from .filteryacc import parser as filter_parser
@@ -46,6 +46,8 @@ NUSPEC_FIELD_MAPPINGS = {
     NUSPEC_FIELD_VERSION: 'version'
 }
 PACKAGE_FIELDS = {f.name: f for f in Package._meta.get_fields()}
+
+logger = logging.getLogger(__name__)
 
 
 @require_http_methods(['GET'])
@@ -122,7 +124,7 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
 @require_http_methods(['GET'])
 def find_packages_by_id(request: HttpRequest) -> HttpResponse:
     if (sem_ver_level := request.GET.get('semVerLevel')):
-        logger.warning(f'Ignoring semVerLevel={sem_ver_level}')
+        logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
     proto = 'https' if request.is_secure() else 'http'
     proto_host = f'{proto}://{request.get_host()}'
     try:
@@ -143,12 +145,15 @@ def packages(request: HttpRequest) -> HttpResponse:
     filter_ = request.GET.get('$filter')
     order_by = request.GET.get('$orderby') or 'id'
     if (sem_ver_level := request.GET.get('semVerLevel')):
-        logger.warning(f'Ignoring semVerLevel={sem_ver_level}')
+        logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
     if (skip := request.GET.get('$skip')):
-        logger.warning(f'Ignoring $skip={skip}')
+        logger.warning('Ignoring $skip=%s', skip)
     if (top := request.GET.get('$top')):
-        logger.warning(f'Ignoring $top={top}')
-    filters = filter_parser.parse(filter_) if filter_ else {}
+        logger.warning('Ignoring $top=%s', top)
+    try:
+        filters = filter_parser.parse(filter_) if filter_ else {}
+    except SyntaxError:
+        return JsonResponse({'error': 'Invalid syntax in filter'}, status=400)
     proto = 'https' if request.is_secure() else 'http'
     proto_host = f'{proto}://{request.get_host()}'
     content = '\n'.join(
@@ -197,6 +202,8 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
             package.file.delete()
             package.delete()
             return HttpResponse(status=204)
+        else:
+            return HttpResponse(status=405)
     return HttpResponseNotFound()
 
 
@@ -211,7 +218,6 @@ class APIV2PackageView(View):
         if not request.content_type or not request.content_type.startswith('multipart/'):
             return JsonResponse(
                 {'error': f'Invalid content type: {request.content_type or "unknown"}'}, status=400)
-        # These 2 lines must exist. Combining into 1 does not work
         try:
             _, files = request.parse_file_upload(request.META, request)
         except MultiPartParserError:
@@ -243,8 +249,8 @@ class APIV2PackageView(View):
         for key, column_name in NUSPEC_FIELD_MAPPINGS.items():
             value = root[0].find(key)
             assert value is not None
-            if not value.text:
-                logger.warning(f'No value for key {key}')
+            if not value.text:  # pragma no cover
+                logger.warning('No value for key %s', key)
                 continue
             column_type = (None if column_name not in PACKAGE_FIELDS else
                            PACKAGE_FIELDS[column_name].get_internal_type())
@@ -262,8 +268,8 @@ class APIV2PackageView(View):
                         new_author, _ = Author.objects.get_or_create(name=name)
                         new_author.save()
                         add_authors.append(new_author)
-                else:
-                    logger.warning(f'Did not set {column_name}')
+                else:  # pragma no cover
+                    logger.warning('Did not set %s', column_name)
             elif column_type == 'BooleanField':
                 setattr(new_package, column_name, value.text.lower() == 'true')
             else:

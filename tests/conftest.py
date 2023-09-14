@@ -49,6 +49,7 @@ urlpatterns = [path('', include('minchoc.urls'))]''')
             'minchoc'
         ],
         LANGUAGE_CODE='en-us',
+        LOGGING={},
         MIDDLEWARE=[
             'django.middleware.security.SecurityMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
