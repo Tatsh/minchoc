@@ -205,7 +205,7 @@ content-type: application/zip\r
                            headers={
                                'content-length': f'{len(content)}',
                                'x-nuget-apikey': nuget_user.token.hex
-                           })  # type: ignore[arg-type])
+                           })  # type: ignore[arg-type]
     assert response.json()['error'] == 'Integrity error (has this already been uploaded?)'
     assert response.status_code == 400
     # find_packages_by_id
