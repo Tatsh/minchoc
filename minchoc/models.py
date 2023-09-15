@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.signals import post_save
+from django.http import HttpRequest
 import django_stubs_ext
 
 django_stubs_ext.monkeypatch()
@@ -13,6 +14,7 @@ __all__ = ('Author', 'Company', 'NugetUser', 'Package')
 
 
 class Company(models.Model):
+    """Company associated to NuGet packages."""
     class Meta:
         verbose_name = 'company'
         verbose_name_plural = 'companies'
@@ -24,17 +26,30 @@ class Company(models.Model):
 
 
 class NugetUser(models.Model):
-    """Can be owners of the nuget spec."""
+    """An owner of a NuGet spec."""
     base = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE)  # type: ignore[var-annotated]
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
     token = models.UUIDField()
+
+    @staticmethod
+    def token_exists(token: str | None) -> bool:
+        """Simple method to check if a token exists."""
+        return bool(token and NugetUser.objects.filter(token=token).exists())
+
+    @staticmethod
+    def request_has_valid_token(request: HttpRequest) -> bool:
+        """
+        Checks if the API key in the request (header ``X-NuGet-ApiKey``, case insensitive) is valid.
+        """
+        return NugetUser.token_exists(request.headers.get('X-NuGet-ApiKey'))
 
     def __str__(self) -> str:
         return cast(str, self.base.username)
 
 
 def post_save_receiver(sender: AbstractUser, instance: AbstractUser, **kwargs: Any) -> None:
+    """Callback to create a ``NugetUser`` when a new user is saved."""
     if not NugetUser.objects.filter(base=instance).exists():
         nuget_user = NugetUser()
         nuget_user.base = instance
@@ -46,7 +61,7 @@ post_save.connect(post_save_receiver, sender=settings.AUTH_USER_MODEL)
 
 
 class Author(models.Model):
-    """Author of the software, not the nuget spec."""
+    """Author of the software, not the NuGet spec."""
     name = models.CharField(max_length=255, unique=True)
 
     def __str__(self) -> str:
@@ -54,6 +69,7 @@ class Author(models.Model):
 
 
 class Tag(models.Model):
+    """Tag associated to NuGet packages."""
     name = models.CharField(max_length=128, unique=True)
 
     def __str__(self) -> str:
@@ -61,6 +77,7 @@ class Tag(models.Model):
 
 
 class Package(models.Model):
+    """An instance of a NuGet package."""
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=('nuget_id', 'version'), name='id_and_version_uniq')
