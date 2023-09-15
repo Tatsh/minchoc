@@ -4,6 +4,10 @@
 [![QA](https://github.com/Tatsh/minchoc/actions/workflows/qa.yml/badge.svg)](https://github.com/Tatsh/minchoc/actions/workflows/qa.yml)
 [![Tests](https://github.com/Tatsh/minchoc/actions/workflows/tests.yml/badge.svg)](https://github.com/Tatsh/minchoc/actions/workflows/tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/Tatsh/minchoc/badge.svg?branch=master)](https://coveralls.io/github/Tatsh/minchoc?branch=master)
+![PyPI - Version](https://img.shields.io/pypi/v/minchoc)
+![GitHub tag (with filter)](https://img.shields.io/github/v/tag/Tatsh/minchoc)
+![GitHub](https://img.shields.io/github/license/Tatsh/minchoc)
+![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/minchoc/v0.0.7/master)
 
 ## Installation
 
