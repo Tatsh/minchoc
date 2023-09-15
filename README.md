@@ -11,9 +11,20 @@
 pip install minchoc
 ```
 
+In `settings.py`:
+
 ```python
 INSTALLED_APPS = ['minchoc']
 ALLOW_PACKAGE_DELETION = False
+```
+
+Add `path('', include('minchoc.urls'))` to your root `urls.py`. Example:
+
+```python
+from django.urls import include, path
+urlpatterns = [
+  path('', include('minchoc.urls'))
+]
 ```
 
 A `DELETE` call to `/api/v2/package/<id>/<version>` will be denied even with authentication unless
@@ -34,3 +45,6 @@ As administrator:
 choco source add -s 'https://your-host/url-prefix'
 choco apikey add -s 'https://your-host/url-prefix' -k 'your-key'
 ```
+
+On non-Windows platforms, you can use my [pychoco](https://github.com/Tatsh/pychoco) package, which
+also supports the above commands.
