@@ -3,12 +3,12 @@ name = "minchoc"
 version = "0.0.7"
 authors = ["Andrew Udvare <audvare@gmail.com>"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Web Environment",
-    "Framework :: Django",
-    "Intended Audience :: Developers",
-    "Topic :: System :: Software Distribution",
-    "Typing :: Typed"
+  "Development Status :: 4 - Beta",
+  "Environment :: Web Environment",
+  "Framework :: Django",
+  "Intended Audience :: Developers",
+  "Topic :: System :: Software Distribution",
+  "Typing :: Typed"
 ]
 description = "Minimal Chocolatey-compatible NuGet server in a Django app."
 documentation = "https://minchoc.readthedocs.io/en/latest/"
@@ -47,6 +47,7 @@ esbonio = "^0.16.1"
 sphinx = "^7.2.2"
 toml = "^0.10.2"
 sphinx-click = "^5.0.1"
+rstcheck = { extras = ["sphinx"], version = "^6.2.0" }
 
 [tool.poetry.group.tests]
 optional = true
@@ -94,7 +95,8 @@ django_find_project = false
 mock_use_standalone_module = true
 
 [tool.rstcheck]
-ignore_directives = "automodule"
+ignore_directives = ["automodule"]
+recursive = true
 
 [tool.ruff]
 exclude = [

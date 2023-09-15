@@ -33,7 +33,8 @@
     "fix-pluggy": "touch \"$(poetry run python -c 'import inspect, os, pluggy; print(os.path.dirname(inspect.getabsfile(pluggy)))')/py.typed\"",
     "format": "yarn prettier -w . && poetry run isort . && poetry run yapf -pri . && markdownlint-cli2 --fix '**/*.md' '#node_modules'",
     "mypy": "yarn fix-pluggy && poetry run mypy .",
-    "qa": "yarn mypy && yarn ruff && yarn check-spelling && yarn check-formatting",
+    "qa": "yarn mypy && yarn ruff && yarn rstcheck && yarn check-spelling && yarn check-formatting",
+    "rstcheck": "poetry run rstcheck --recursive .",
     "ruff": "poetry run ruff check .",
     "test": "poetry run pytest"
   },

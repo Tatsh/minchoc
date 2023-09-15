@@ -115,6 +115,7 @@ pstate
 psycopg
 ptrackers
 pycache
+pychoco
 pylance
 pylint
 pypackages
@@ -166,6 +167,7 @@ unexpectedru
 unichr
 unidecode
 urllib
+urlpatterns
 valign
 venv
 virtualenvs
