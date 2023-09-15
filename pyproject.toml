@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "minchoc"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Andrew Udvare <audvare@gmail.com>"]
 classifiers = [
   "Development Status :: 4 - Beta",
