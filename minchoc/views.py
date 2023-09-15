@@ -20,7 +20,7 @@ from django.views.decorators.http import require_http_methods
 from .constants import FEED_XML_POST, FEED_XML_PRE
 from .filteryacc import parser as filter_parser
 from .models import Author, NugetUser, Package, Tag
-from .utils import is_authorized, make_entry
+from .utils import make_entry
 
 NUSPEC_XSD_URI_PREFIX = '{http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd}'
 NUSPEC_FIELD_AUTHORS = f'{NUSPEC_XSD_URI_PREFIX}authors'
@@ -53,14 +53,13 @@ logger = logging.getLogger(__name__)
 @require_http_methods(['GET'])
 def home(_request: HttpRequest) -> HttpResponse:
     """Static homepage."""
-    return HttpResponse('{}', content_type='application/json')
+    return JsonResponse({})
 
 
 @require_http_methods(['GET'])
 def metadata(_request: HttpRequest) -> HttpResponse:
     """Static page at ``/$metadata`` and at ``/api/v2/$metadata``."""
-    return HttpResponse('''
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+    return HttpResponse('''<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <service xml:base="http://fixme/api/v2/"
                         xmlns:atom="http://www.w3.org/2005/Atom"
                         xmlns:app="http://www.w3.org/2007/app"
@@ -100,8 +99,8 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
 @require_http_methods(['GET'])
 def packages(request: HttpRequest) -> HttpResponse:
     """
-    Takes a ``GET`` request to find packages. Query parameters `$skip`, `$top` and `semVerLevel` are
-    ignored.
+    Takes a ``GET`` request to find packages. Query parameters ``$skip``, ``$top`` and
+    ``semVerLevel`` are ignored. This means pagination is currently not supported.
 
     Sample URL: ``/Packages()?$orderby=id&$filter=(tolower(Id) eq 'package-name') and IsLatestVersion&$skip=0&$top=1``
     """  # noqa: E501
@@ -132,7 +131,7 @@ def packages(request: HttpRequest) -> HttpResponse:
 @require_http_methods(['GET'])
 def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpResponse:
     """
-    Alternate `Packages()` with arguments to find a single package instance.
+    Alternate ``Packages()`` with arguments to find a single package instance.
 
     Sample URL: ``/Packages(Id='name',Version='123.0.0')``
     """
@@ -152,7 +151,7 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
 @csrf_exempt
 def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpResponse:
     """
-    Get the .nuget file for a package instance.
+    Get the file for a package instance.
 
     Sample URL: ``/api/package/name/123.0.0``
 
@@ -166,7 +165,7 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
                 package.save()
                 return HttpResponse(f.read(), content_type='application/zip')
         if request.method == 'DELETE' and settings.ALLOW_PACKAGE_DELETION:
-            if not is_authorized(request):
+            if not NugetUser.request_has_valid_token(request):
                 return JsonResponse({'error': 'Not authorized'}, status=403)
             package.file.delete()
             package.delete()
@@ -180,12 +179,12 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
 class APIV2PackageView(View):
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         """Checks if a user is authorised before allowing the request to continue."""
-        if not is_authorized(request):
+        if not NugetUser.request_has_valid_token(request):
             return JsonResponse({'error': 'Not authorized'}, status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def put(self, request: HttpRequest) -> HttpResponse:
-        """Upload a package. This must be a multipart upload with a single valid .nuget file."""
+        """Upload a package. This must be a multipart upload with a single valid NuGet file."""
         if not request.content_type or not request.content_type.startswith('multipart/'):
             return JsonResponse(
                 {'error': f'Invalid content type: {request.content_type or "unknown"}'}, status=400)
@@ -268,5 +267,5 @@ class APIV2PackageView(View):
         return HttpResponse(status=201)
 
     def post(self, request: HttpRequest) -> HttpResponse:
-        """POST is an alias for PUT."""
+        """A ``POST`` request is treated the same as ``PUT``."""
         return self.put(request)

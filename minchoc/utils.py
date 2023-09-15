@@ -1,9 +1,8 @@
 from django.db.models import Sum
-from django.http import HttpRequest
 
-from .models import NugetUser, Package
+from .models import Package
 
-__all__ = ('is_authorized', 'make_entry')
+__all__ = ('make_entry',)
 
 
 def make_entry(host: str, package: Package, ending: str = '\n') -> str:
@@ -55,11 +54,3 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
         <d:VersionDownloadCount m:type="Edm.Int32">{package.download_count}</d:VersionDownloadCount>
     </m:properties>
 </entry>{ending}'''  # noqa: E501
-
-
-def is_authorized(request: HttpRequest) -> bool:
-    """Checks if the API key in the request (header ``X-NuGet-ApiKey``) is valid."""
-    try:
-        return NugetUser.objects.filter(token=request.headers['X-NuGet-ApiKey']).exists()
-    except KeyError:
-        return False
