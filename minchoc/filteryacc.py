@@ -52,4 +52,5 @@ def p_error(p: LexToken) -> None:
     raise SyntaxError('Syntax error in input')
 
 
+#: An extremely basic parser for parsing ``$filter`` strings.
 parser = yacc.yacc(debug=False)
