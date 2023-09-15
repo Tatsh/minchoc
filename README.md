@@ -11,11 +11,12 @@
 pip install minchoc
 ```
 
-In `settings.py`:
+In `settings.py`, add `'minchoc'` to `INSTALLED_APPS`. Set `ALLOW_PACKAGE_DELETION` to `True` if you
+want to enable this API.
 
 ```python
 INSTALLED_APPS = ['minchoc']
-ALLOW_PACKAGE_DELETION = False
+ALLOW_PACKAGE_DELETION = True
 ```
 
 Add `path('', include('minchoc.urls'))` to your root `urls.py`. Example:
@@ -23,7 +24,8 @@ Add `path('', include('minchoc.urls'))` to your root `urls.py`. Example:
 ```python
 from django.urls import include, path
 urlpatterns = [
-  path('', include('minchoc.urls'))
+    path('admin/', admin.site.urls),
+    path('', include('minchoc.urls')),
 ]
 ```
 
