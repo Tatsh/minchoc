@@ -161,7 +161,7 @@ content-type: application/zip\r
     assert response.status_code == 400
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_put(client: Client, nuget_user: NugetUser) -> None:
     with NamedTemporaryFile('rb', prefix='minchoc_test', suffix='.nuget') as tf:
         temp_name = tf.name
@@ -199,15 +199,15 @@ content-type: application/zip\r
                               'x-nuget-apikey': nuget_user.token.hex
                           })  # type: ignore[arg-type]
     assert response.status_code == 201
-    # response = client.post('/api/v2/package/',
-    #                        content,
-    #                        'multipart/form-data; boundary=1234abc',
-    #                        headers={
-    #                            'content-length': f'{len(content)}',
-    #                            'x-nuget-apikey': nuget_user.token.hex
-    #                        })  # type: ignore[arg-type])
-    # assert response.json()['error'] == 'Integrity error (has this already been uploaded?)'
-    # assert response.status_code == 400
+    response = client.post('/api/v2/package/',
+                           content,
+                           'multipart/form-data; boundary=1234abc',
+                           headers={
+                               'content-length': f'{len(content)}',
+                               'x-nuget-apikey': nuget_user.token.hex
+                           })  # type: ignore[arg-type])
+    assert response.json()['error'] == 'Integrity error (has this already been uploaded?)'
+    assert response.status_code == 400
     # find_packages_by_id
     response = client.get('/FindPackagesById()?semVerLevel=2.0.0&id=somename')
     assert re.search(GALLERY_RE, response.content) is not None
