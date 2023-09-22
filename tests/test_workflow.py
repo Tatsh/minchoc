@@ -219,6 +219,15 @@ content-type: application/zip\r
         '&semVerLevel=2.0.0&$skip=0&$top=1')
     assert re.search(GALLERY_RE, response.content) is not None
     assert response.status_code == 200
+    # search as performed with ``choco search somename``
+    response = client.get(
+        '/Packages()',
+        QUERY_STRING=("$filter=((((Id ne null) and substringof('somename',tolower(Id))) or "
+                      "((Description ne null) and substringof('somename',tolower(Description))))"
+                      " or ((Tags ne null) and substringof(' somename ',tolower(Tags)))) "
+                      "and IsLatestVersion"))
+    assert re.search(GALLERY_RE, response.content) is not None
+    assert response.status_code == 200
     # packages_with_args
     response = client.get("/Packages(Id='somename',Version='1.0.2')")
     assert re.search(GALLERY_RE, response.content) is not None

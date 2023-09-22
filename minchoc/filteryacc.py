@@ -1,5 +1,6 @@
 from typing import Any, Literal
 
+from django.db.models import Q
 from ply import yacc
 from ply.lex import LexToken
 
@@ -7,13 +8,12 @@ from minchoc.filterlex import tokens  # noqa: F401
 
 __all__ = ('parser',)
 
-FIELD_MAPPING = {'Description': 'description', 'Id': 'nuget_id'}
-FUNC_MAPPING = {'substringof': 'contains', 'tolower': 'iexact'}
+FIELD_MAPPING = {'Description': 'description', 'Id': 'nuget_id', 'Tags': 'tags__name'}
 
 
 def setup_p0(p: yacc.YaccProduction) -> None:
-    if not isinstance(p[0], dict):
-        p[0] = {}
+    if not isinstance(p[0], Q):  # pragma no cover
+        p[0] = Q()
 
 
 def p_expression_expr(p: yacc.YaccProduction) -> None:
@@ -23,37 +23,33 @@ def p_expression_expr(p: yacc.YaccProduction) -> None:
 
 
 def p_substringof(p: yacc.YaccProduction) -> None:
-    """substringof : SUBSTRINGOF LPAREN expression COMMA expression RPAREN"""
+    """substringof : SUBSTRINGOF LPAREN STRING COMMA expression RPAREN"""
     setup_p0(p)
-    a: Any
-    b: Any
-    res: Any
-    res, _, __, a, ___, b, ____ = p
-    if 'substringof' not in res:
-        res['substringof'] = []
-    res['substringof'].extend([a, b])
+    a: str
+    b: Q
+    _, __, ___, a, ____, b, _____ = p
+    db_field = b.children[0][0]
+    prefix = ''
+    if '__iexact' in db_field:
+        prefix = 'i'
+        db_field = db_field.replace('__iexact', '')
+    p[0] &= Q(**{f'{db_field}__{prefix}contains': a})
 
 
 def p_tolower(p: yacc.YaccProduction) -> None:
-    """tolower : TOLOWER LPAREN expression RPAREN"""
+    """tolower : TOLOWER LPAREN FIELD RPAREN"""
     setup_p0(p)
-    expr: Any
-    res: Any
-    res, _, __, expr, ___ = p
-    if 'tolower' not in res:
-        res['tolower'] = []
-    res['tolower'].append(expr)
+    field: Literal['Description', 'Id', 'Tags']
+    _, __, ___, field, ____ = p
+    p[0] &= Q(**{f'{FIELD_MAPPING[field]}__iexact': None})
 
 
 def p_expression_field(p: yacc.YaccProduction) -> None:
     """expression : FIELD"""
     setup_p0(p)
-    field: Literal['Id', 'Description', 'Tags']
-    res: Any
-    res, field = p
-    if 'fields' not in res:
-        res['fields'] = []
-    res['fields'].append(field)
+    field: Literal['Description', 'Id', 'Tags']
+    _, field = p
+    p[0] &= Q(**{FIELD_MAPPING[field]: None})
 
 
 def p_expression_op(p: yacc.YaccProduction) -> None:
@@ -62,25 +58,31 @@ def p_expression_op(p: yacc.YaccProduction) -> None:
                   | expression NE expression
                   | expression EQ expression"""
     setup_p0(p)
-    a: Any
-    b: Any
+    a: Q
+    b: Q | str
     op: Literal['and', 'eq', 'ne', 'or']
-    res: Any
-    res, a, op, b = p
-    if op not in res:
-        res[op] = []
-    res[op].extend([a, b])
+    _, a, op, b = p
+    if op == 'and':
+        p[0] &= a & b
+    elif op == 'or':
+        p[0] &= a | b
+    else:
+        db_field: str = a.children[0][0]
+        rhs = b.children[0][0] if isinstance(b, Q) else None
+        if b == 'null' or rhs == 'rhs__isnull':
+            p[0] &= Q(**{f'{db_field}__isnull': False if op == 'ne' else True})
+        else:  # eq
+            if not isinstance(b, (int, str)):
+                raise ValueError('Only numbers and strings can be used with eq.')
+            p[0] &= Q(**{db_field: b})
 
 
 def p_expression_str(p: yacc.YaccProduction) -> None:
     """expression : STRING"""
     setup_p0(p)
     s: str
-    res: Any
-    res, s = p
-    if 'strings' not in res:
-        res['strings'] = []
-    res['strings'].append(s)
+    _, s = p
+    p[0] = s
 
 
 def p_expression(p: yacc.YaccProduction) -> None:
@@ -90,11 +92,13 @@ def p_expression(p: yacc.YaccProduction) -> None:
                   | ISLATESTVERSION"""
     setup_p0(p)
     expr: Any
-    res: Any
-    res, expr = p
-    if 'expressions' not in res:
-        res['expressions'] = []
-    res['expressions'].append(None if expr == 'null' else expr)
+    _, expr = p
+    if expr == 'IsLatestVersion':
+        p[0] &= Q(is_latest_version=True)
+    elif expr == 'null':
+        p[0] &= Q(rhs__isnull=True)
+    else:
+        p[0] &= expr
 
 
 def p_error(p: LexToken) -> None:
@@ -102,12 +106,4 @@ def p_error(p: LexToken) -> None:
 
 
 parser = yacc.yacc(debug=False)
-"""An extremely basic parser for parsing ``$filter`` strings."""
-
-# if __name__ == '__main__':
-#     terms = 'cat'
-#     filter_str = (f"((((Id ne null) and substringof('{terms}',tolower(Id))) or "
-#                   f"((Description ne null) and substringof('{terms}',tolower(Description))))"
-#                   f" or ((Tags ne null) and substringof(' {terms} ',tolower(Tags)))) "
-#                   "and IsLatestVersion")
-#     print(json.dumps({'$filter': filter_str, 'output': parser.parse(filter_str)}, sort_keys=True))
+"""An extremely basic parser for parsing ``$filter`` strings. Returns a ``Q`` instance."""

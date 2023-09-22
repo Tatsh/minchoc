@@ -121,8 +121,7 @@ def packages(request: HttpRequest) -> HttpResponse:
     proto = 'https' if request.is_secure() else 'http'
     proto_host = f'{proto}://{request.get_host()}'
     content = '\n'.join(
-        make_entry(proto_host, x)
-        for x in Package.objects.order_by(order_by).filter(**filters)[0:20])
+        make_entry(proto_host, x) for x in Package.objects.order_by(order_by).filter(filters)[0:20])
     return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
         'BASEURL': proto_host,
         'UPDATED': datetime.now().isoformat()
