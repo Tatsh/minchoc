@@ -20,19 +20,19 @@ from django.views.decorators.http import require_http_methods
 from .constants import FEED_XML_POST, FEED_XML_PRE
 from .filteryacc import parser as filter_parser
 from .models import Author, NugetUser, Package, Tag
-from .utils import make_entry
+from .utils import make_entry, tag_text_or
 
-NUSPEC_XSD_URI_PREFIX = '{http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd}'
-NUSPEC_FIELD_AUTHORS = f'{NUSPEC_XSD_URI_PREFIX}authors'
-NUSPEC_FIELD_DESCRIPTION = f'{NUSPEC_XSD_URI_PREFIX}description'
-NUSPEC_FIELD_ID = f'{NUSPEC_XSD_URI_PREFIX}id'
-NUSPEC_FIELD_PROJECT_URL = f'{NUSPEC_XSD_URI_PREFIX}projectUrl'
-NUSPEC_FIELD_REQUIRE_LICENSE_ACCEPTANCE = f'{NUSPEC_XSD_URI_PREFIX}requireLicenseAcceptance'
-NUSPEC_FIELD_SOURCE_URL = f'{NUSPEC_XSD_URI_PREFIX}packageSourceUrl'
-NUSPEC_FIELD_SUMMARY = f'{NUSPEC_XSD_URI_PREFIX}summary'
-NUSPEC_FIELD_TAGS = f'{NUSPEC_XSD_URI_PREFIX}tags'
-NUSPEC_FIELD_TITLE = f'{NUSPEC_XSD_URI_PREFIX}title'
-NUSPEC_FIELD_VERSION = f'{NUSPEC_XSD_URI_PREFIX}version'
+NUSPEC_NAMESPACES = {'': 'http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd'}
+NUSPEC_FIELD_AUTHORS = 'authors'
+NUSPEC_FIELD_DESCRIPTION = 'description'
+NUSPEC_FIELD_ID = 'id'
+NUSPEC_FIELD_PROJECT_URL = 'projectUrl'
+NUSPEC_FIELD_REQUIRE_LICENSE_ACCEPTANCE = 'requireLicenseAcceptance'
+NUSPEC_FIELD_SOURCE_URL = 'packageSourceUrl'
+NUSPEC_FIELD_SUMMARY = 'summary'
+NUSPEC_FIELD_TAGS = 'tags'
+NUSPEC_FIELD_TITLE = 'title'
+NUSPEC_FIELD_VERSION = 'version'
 NUSPEC_FIELD_MAPPINGS = {
     NUSPEC_FIELD_AUTHORS: 'authors',
     NUSPEC_FIELD_DESCRIPTION: 'description',
@@ -79,6 +79,8 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
 
     Sample URL: ``/FindPackagesById()?id=package-name``
     """
+    # FIXME Handle $skiptoken ``$skiptoken='Vivaldi','1.13.971.8-snapshot'`` (alternative way to
+    # paginate)
     if (sem_ver_level := request.GET.get('semVerLevel')):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
     proto = 'https' if request.is_secure() else 'http'
@@ -216,10 +218,10 @@ class APIV2PackageView(View):
         new_package = Package()
         add_tags = []
         add_authors = []
+        metadata = root[0]
         for key, column_name in NUSPEC_FIELD_MAPPINGS.items():
-            value = root[0].find(key)
-            assert value is not None
-            if not value.text:  # pragma no cover
+            value = tag_text_or(metadata.find(key, NUSPEC_NAMESPACES))
+            if not value:  # pragma no cover
                 logger.warning('No value for key %s', key)
                 continue
             column_type = (None if column_name not in PACKAGE_FIELDS else
@@ -227,13 +229,13 @@ class APIV2PackageView(View):
             if not column_type or column_type == 'ManyToManyField':
                 if column_name == 'tags':
                     assert value is not None
-                    tags = [x.strip() for x in re.split(r'\s+', value.text)]
+                    tags = [x.strip() for x in re.split(r'\s+', value)]
                     for name in tags:
                         new_tag, _ = Tag.objects.filter(name=name).get_or_create(name=name)
                         new_tag.save()
                         add_tags.append(new_tag)
                 elif column_name == 'authors':
-                    authors = [x.strip() for x in re.split(',', value.text)]
+                    authors = [x.strip() for x in re.split(',', value)]
                     for name in authors:
                         new_author, _ = Author.objects.get_or_create(name=name)
                         new_author.save()
@@ -241,9 +243,9 @@ class APIV2PackageView(View):
                 else:  # pragma no cover
                     logger.warning('Did not set %s', column_name)
             elif column_type == 'BooleanField':
-                setattr(new_package, column_name, value.text.lower() == 'true')
+                setattr(new_package, column_name, value.lower() == 'true')
             else:
-                setattr(new_package, column_name, value.text)
+                setattr(new_package, column_name, value)
         version_split = new_package.version.split('.')
         new_package.version0 = int(version_split[0])
         new_package.version1 = int(version_split[1])
