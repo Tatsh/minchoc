@@ -7,7 +7,7 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/minchoc)
 ![GitHub tag (with filter)](https://img.shields.io/github/v/tag/Tatsh/minchoc)
 ![GitHub](https://img.shields.io/github/license/Tatsh/minchoc)
-![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/minchoc/v0.0.8/master)
+![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/minchoc/v0.0.9/master)
 
 ## Installation
 

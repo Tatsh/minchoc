@@ -19,6 +19,7 @@ cmdclass
 colenabled
 colorder
 colwidth
+commitizen
 concat
 contextlib
 contextmanager
