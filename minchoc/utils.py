@@ -1,8 +1,10 @@
+from xml.etree.ElementTree import Element
+
 from django.db.models import Sum
 
 from .models import Package
 
-__all__ = ('make_entry',)
+__all__ = ('make_entry', 'tag_text_or')
 
 
 def make_entry(host: str, package: Package, ending: str = '\n') -> str:
@@ -54,3 +56,8 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
         <d:VersionDownloadCount m:type="Edm.Int32">{package.download_count}</d:VersionDownloadCount>
     </m:properties>
 </entry>{ending}'''  # noqa: E501
+
+
+def tag_text_or(tag: Element | None, default: str | None = None) -> str | None:
+    """Return text from a tag or the default value specified."""
+    return tag.text if tag is not None and tag.text else default
