@@ -65,6 +65,7 @@
     ".directory",
     ".git",
     ".mypy_cache",
+    ".ruff_cache/**",
     ".vscode/extensions.json",
     "__pycache__",
     "_build/**",
