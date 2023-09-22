@@ -41,6 +41,7 @@ ruff = ">=0.0.289,<0.0.291"
 toml = "^0.10.2"
 types-toml = "^0.10.8.7"
 yapf = "^0.40.1"
+commitizen = "^3.9.1"
 
 [tool.poetry.group.docs]
 optional = true
@@ -67,6 +68,11 @@ pytest-mock = "^3.11.1"
 [build-system]
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
+
+[tool.cz]
+tag_format = "v$version"
+version_files = ["README.md", "package.json"]
+version_provider = "pep621"
 
 [tool.isort]
 case_sensitive = true
