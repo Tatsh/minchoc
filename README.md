@@ -41,7 +41,11 @@ A `DELETE` call to `/api/v2/package/<id>/<version>` will be denied even with aut
 When a user is created, a `NugetUser` is also made. This will contain the API key for pushing.
 It can be viewed in admin.
 
-Only `choco install` and `choco push` are supported.
+### Supported commands
+
+- `choco install`
+- `choco push`
+- `choco search`
 
 ### Add source to Chocolatey
 
