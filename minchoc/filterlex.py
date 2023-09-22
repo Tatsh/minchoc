@@ -5,14 +5,21 @@ from ply import lex
 __all__ = ('tokens',)
 
 states = (('string', 'exclusive'),)
-tokens = ('AND', 'EQ', 'ISLATESTVERSION', 'LPAREN', 'RPAREN', 'STRING', 'TOLOWER_ID')
+tokens = ('AND', 'COMMA', 'EQ', 'FIELD', 'ISLATESTVERSION', 'LPAREN', 'NE', 'NULL', 'OR', 'RPAREN',
+          'STRING', 'SUBSTRINGOF', 'TOLOWER')
 
 t_AND = r'and'
+t_COMMA = r','
 t_EQ = r'eq'
+t_FIELD = r'Description|Id|Tags'
 t_ISLATESTVERSION = r'IsLatestVersion'
-t_TOLOWER_ID = r'tolower\(Id\)'
 t_LPAREN = r'\('
+t_NE = r'ne'
+t_NULL = r'null'
+t_OR = r'or'
 t_RPAREN = r'\)'
+t_SUBSTRINGOF = r'substringof'
+t_TOLOWER = r'tolower'
 
 t_ignore = ' '
 t_string_ignore = ' '
