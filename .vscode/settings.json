@@ -39,7 +39,10 @@
   "python.analysis.stubPath": ".stubs",
   "python.analysis.typeCheckingMode": "strict",
   "python.languageServer": "Pylance",
-  "ruff.args": ["--extend-exclude=/**/site-packages/**/*.py"],
+  "ruff.args": [
+    "--extend-exclude=/**/site-packages/**/*.py",
+    "--extend-exclude=/**/lib/python3.*/*.py"
+  ],
   "ruff.organizeImports": false,
   "yaml.format.printWidth": 100
 }
