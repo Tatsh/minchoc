@@ -1,10 +1,17 @@
-from typing import Any
+from typing import Any, Iterator
 
 from .lex import LexToken, Lexer
 
 
 class YaccProduction:
     lexer: Lexer | None
+
+    def __init__(self, s: slice, stack: Any) -> None:
+        ...
+
+    def __iter__(self) -> Iterator[Any]:
+        """Not really in the class. Only here for typing when doing destructured assignment."""
+        ...
 
     def __getitem__(self, indices: tuple[int, ...] | int) -> Any:
         ...
