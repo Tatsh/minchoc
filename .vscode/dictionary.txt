@@ -74,6 +74,8 @@ levelno
 lexdata
 lexer
 lexpos
+lexspan
+linespan
 loguru
 lunchy
 maxdepth
@@ -142,6 +144,7 @@ setslice
 setuptools
 shortcode
 sindex
+skiptoken
 somename
 speedintitle
 speedlistdl
@@ -150,6 +153,7 @@ sponsorblock
 standarderror
 status_forcelist
 subclassing
+substringof
 subtitleslangs
 tablefmt
 tadd
