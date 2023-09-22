@@ -1,4 +1,5 @@
 *.pyc
+*.swp
 *pgpass*
 /.coverage
 /.directory
