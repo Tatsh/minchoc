@@ -75,12 +75,12 @@ def p_expression_op(p: yacc.YaccProduction) -> None:
 def p_expression_str(p: yacc.YaccProduction) -> None:
     """expression : STRING"""
     setup_p0(p)
-    expr: Any
+    s: str
     res: Any
-    res, expr = p
+    res, s = p
     if 'strings' not in res:
         res['strings'] = []
-    res['strings'].append(f'"{expr}"')
+    res['strings'].append(s)
 
 
 def p_expression(p: yacc.YaccProduction) -> None:
