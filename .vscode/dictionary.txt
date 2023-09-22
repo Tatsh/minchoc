@@ -63,6 +63,7 @@ ignoreerrors
 infojson
 inlinevar
 islatestversion
+isnull
 isort
 itertools
 jinja
