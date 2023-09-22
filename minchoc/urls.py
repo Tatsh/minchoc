@@ -13,5 +13,6 @@ urlpatterns = [
     path('api/v2/$metadata', views.metadata),
     path('api/v2/package/<name>/<version>', views.fetch_package_file),
     path('api/v2/package/', views.APIV2PackageView.as_view()),
+    # path('api/v2/Search()', views.APIV2PackageView.as_view()),
     path('', views.home)
 ]
