@@ -75,6 +75,7 @@ from_first = true
 line_length = 100
 order_by_type = true
 skip_gitignore = true
+skip_glob = ['*.pyi']
 use_parentheses = true
 
 [tool.mypy]
