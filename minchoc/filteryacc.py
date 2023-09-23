@@ -68,8 +68,7 @@ def p_expression_op(p: yacc.YaccProduction) -> None:
         p[0] &= a | b
     else:
         db_field: str = a.children[0][0]
-        rhs = b.children[0][0] if isinstance(b, Q) else None
-        if b == 'null' or rhs == 'rhs__isnull':
+        if b == 'null' or (b.children[0][0] if isinstance(b, Q) else None) == 'rhs__isnull':
             p[0] &= Q(**{f'{db_field}__isnull': False if op == 'ne' else True})
         else:  # eq
             if not isinstance(b, (int, str)):
