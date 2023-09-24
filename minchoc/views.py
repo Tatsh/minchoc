@@ -18,7 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .constants import FEED_XML_POST, FEED_XML_PRE
-from .filteryacc import parser as filter_parser
+from .filteryacc import FIELD_MAPPING, parser as filter_parser
 from .models import Author, NugetUser, Package, Tag
 from .utils import make_entry, tag_text_or
 
@@ -107,7 +107,9 @@ def packages(request: HttpRequest) -> HttpResponse:
     Sample URL: ``/Packages()?$orderby=id&$filter=(tolower(Id) eq 'package-name') and IsLatestVersion&$skip=0&$top=1``
     """  # noqa: E501
     filter_ = request.GET.get('$filter')
-    order_by = request.GET.get('$orderby') or 'id'
+    req_order_by = request.GET.get('$orderby')
+    order_by = (FIELD_MAPPING[req_order_by]
+                if req_order_by and req_order_by in FIELD_MAPPING else 'nuget_id')
     if (sem_ver_level := request.GET.get('semVerLevel')):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
     if (skip := request.GET.get('$skip')):

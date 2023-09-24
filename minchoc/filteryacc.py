@@ -6,7 +6,7 @@ from ply.lex import LexToken
 
 from minchoc.filterlex import tokens  # noqa: F401
 
-__all__ = ('parser',)
+__all__ = ('FIELD_MAPPING', 'parser')
 
 FIELD_MAPPING = {'Description': 'description', 'Id': 'nuget_id', 'Tags': 'tags__name'}
 
