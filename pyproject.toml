@@ -25,7 +25,7 @@ repository = "https://github.com/Tatsh/minchoc"
 [tool.poetry.dependencies]
 python = ">=3.10,<4"
 defusedxml = "^0.7.1"
-django = "^4.2.4"
+django = ">=4.2.4,<6.0.0"
 django-stubs-ext = "^4.2.2"
 ply = "^3.11"
 
