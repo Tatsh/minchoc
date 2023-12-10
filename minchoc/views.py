@@ -1,10 +1,10 @@
-from datetime import datetime
-from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import Any
 import logging
 import re
 import zipfile
+from datetime import datetime, timezone
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Any
 
 from defusedxml.ElementTree import parse as parse_xml
 from django.conf import settings
@@ -12,13 +12,15 @@ from django.core.files import File
 from django.db import IntegrityError
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, JsonResponse
 from django.http.multipartparser import MultiPartParserError
+from django.http.response import HttpResponseBase
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .constants import FEED_XML_POST, FEED_XML_PRE
-from .filteryacc import FIELD_MAPPING, parser as filter_parser
+from .filteryacc import FIELD_MAPPING
+from .filteryacc import parser as filter_parser
 from .models import Author, NugetUser, Package, Tag
 from .utils import make_entry, tag_text_or
 
@@ -45,7 +47,7 @@ NUSPEC_FIELD_MAPPINGS = {
     NUSPEC_FIELD_TITLE: 'title',
     NUSPEC_FIELD_VERSION: 'version'
 }
-PACKAGE_FIELDS = {f.name: f for f in Package._meta.get_fields()}
+PACKAGE_FIELDS = {f.name: f for f in Package._meta.get_fields()}  # noqa: SLF001
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +81,7 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
 
     Sample URL: ``/FindPackagesById()?id=package-name``
     """
-    # FIXME Handle $skiptoken ``$skiptoken='Vivaldi','1.13.971.8-snapshot'`` (alternative way to
+    # TODO Handle $skiptoken ``$skiptoken='Vivaldi','1.13.971.8-snapshot'`` (alternative way to
     # paginate)
     if (sem_ver_level := request.GET.get('semVerLevel')):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
@@ -91,7 +93,7 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
             for x in Package.objects.filter(nuget_id=request.GET['id'].replace('\'', '')))
         return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
             'BASEURL': proto_host,
-            'UPDATED': datetime.now().isoformat()
+            'UPDATED': datetime.now(timezone.utc).isoformat()
         },
                             content_type='application/xml')
     except KeyError:
@@ -126,7 +128,7 @@ def packages(request: HttpRequest) -> HttpResponse:
         make_entry(proto_host, x) for x in Package.objects.order_by(order_by).filter(filters)[0:20])
     return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
         'BASEURL': proto_host,
-        'UPDATED': datetime.now().isoformat()
+        'UPDATED': datetime.now(timezone.utc).isoformat()
     },
                         content_type='application/xml')
 
@@ -144,7 +146,7 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
         content = make_entry(proto_host, package)
         return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
             'BASEURL': proto_host,
-            'UPDATED': datetime.now().isoformat()
+            'UPDATED': datetime.now(timezone.utc).isoformat()
         },
                             content_type='application/xml')
     return HttpResponseNotFound()
@@ -173,14 +175,13 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
             package.file.delete()
             package.delete()
             return HttpResponse(status=204)
-        else:
-            return HttpResponse(status=405)
+        return HttpResponse(status=405)
     return HttpResponseNotFound()
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class APIV2PackageView(View):
-    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponseBase:
         """Checks if a user is authorised before allowing the request to continue."""
         if not NugetUser.request_has_valid_token(request):
             return JsonResponse({'error': 'Not authorized'}, status=403)
@@ -256,7 +257,7 @@ class APIV2PackageView(View):
         except IndexError:
             pass
         new_package.size = nuget_file.size
-        new_package.file = File(nuget_file, nuget_file.name)  # type: ignore[assignment]
+        new_package.file = File(nuget_file, nuget_file.name)
         uploader = NugetUser.objects.filter(token=request.headers['x-nuget-apikey']).first()
         assert uploader is not None
         new_package.uploader = uploader

@@ -50,7 +50,7 @@ def t_string_quote(t: lex.LexToken) -> lex.LexToken:
 
 
 def t_string_error(t: lex.LexToken) -> None:
-    # print("illegal character '%s'" % t.value[0])
+    # print("illegal character '%s'" % t.value[0])  # noqa: ERA001
     t.lexer.skip(1)
 
 

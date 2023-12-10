@@ -1,9 +1,10 @@
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture()
 def nuget_user() -> Iterator[Any]:
     from django.contrib.auth.models import User
 

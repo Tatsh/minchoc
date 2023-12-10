@@ -1,7 +1,11 @@
-from django.db.models import Q
+from typing import TYPE_CHECKING
+
 import pytest
 
-from minchoc.filteryacc import parser
+from minchoc.filteryacc import InvalidTypeForEq, parser
+
+if TYPE_CHECKING:
+    from django.db.models import Q
 
 
 def test_parser_default_chocolatey_search_filter() -> None:
@@ -26,7 +30,7 @@ def test_parser_default_chocolatey_search_filter() -> None:
 
 
 def test_parser_bad_eq() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidTypeForEq):
         parser.parse('Id eq Description')
 
 

@@ -52,6 +52,11 @@ def p_expression_field(p: yacc.YaccProduction) -> None:
     p[0] &= Q(**{FIELD_MAPPING[field]: None})
 
 
+class InvalidTypeForEq(Exception):
+    def __init__(self) -> None:
+        super().__init__('Only numbers and strings can be used with eq.')
+
+
 def p_expression_op(p: yacc.YaccProduction) -> None:
     """expression : expression OR expression
                   | expression AND expression
@@ -69,10 +74,10 @@ def p_expression_op(p: yacc.YaccProduction) -> None:
     else:
         db_field: str = a.children[0][0]
         if b == 'null' or (b.children[0][0] if isinstance(b, Q) else None) == 'rhs__isnull':
-            p[0] &= Q(**{f'{db_field}__isnull': False if op == 'ne' else True})
+            p[0] &= Q(**{f'{db_field}__isnull': op != 'ne'})
         else:  # eq
-            if not isinstance(b, (int, str)):
-                raise ValueError('Only numbers and strings can be used with eq.')
+            if not isinstance(b, int | str):
+                raise InvalidTypeForEq
             p[0] &= Q(**{db_field: b})
 
 
@@ -82,6 +87,11 @@ def p_expression_str(p: yacc.YaccProduction) -> None:
     s: str
     _, s = p
     p[0] = s
+
+
+class GenericSyntaxError(SyntaxError):
+    def __init__(self, index: int, token: str):
+        super().__init__(f'Syntax error (index: {index}, token: "{token}")')
 
 
 def p_expression(p: yacc.YaccProduction) -> None:
@@ -101,7 +111,7 @@ def p_expression(p: yacc.YaccProduction) -> None:
 
 
 def p_error(p: LexToken) -> None:
-    raise SyntaxError(f'Syntax error (index: {p.lexer.lexpos}, token: "{p.value}")')
+    raise GenericSyntaxError(p.lexer.lexpos, p.value)
 
 
 parser = yacc.yacc(debug=False)

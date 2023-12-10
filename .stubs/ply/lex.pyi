@@ -15,7 +15,7 @@ class Lexer:
 
 class LexToken:
     lexer: Lexer
-    type: Any
+    type: Any  # noqa: A003
     value: Any
 
 

@@ -1,12 +1,12 @@
-from typing import Any, cast
 import uuid
+from typing import Any, cast
 
+import django_stubs_ext
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.signals import post_save
 from django.http import HttpRequest
-import django_stubs_ext
 
 django_stubs_ext.monkeypatch()
 
@@ -70,7 +70,7 @@ class Author(models.Model):
 
 class Tag(models.Model):
     """Tag associated to NuGet packages."""
-    name = models.CharField(max_length=128, unique=True)
+    name: models.CharField[str] = models.CharField(max_length=128, unique=True)
 
     def __str__(self) -> str:
         return self.name
@@ -83,13 +83,13 @@ class Package(models.Model):
             models.UniqueConstraint(fields=('nuget_id', 'version'), name='id_and_version_uniq')
         ]
 
-    authors = models.ManyToManyField(Author)  # type: ignore[var-annotated]
-    copyright = models.TextField(null=True)
+    authors = models.ManyToManyField(Author)
+    copyright = models.TextField(null=True)  # noqa: A003
     dependencies = models.JSONField(null=True)
     description = models.TextField(null=True)
     download_count = models.PositiveBigIntegerField(default=0)
     file = models.FileField(upload_to='packages')
-    hash = models.TextField(null=True)
+    hash = models.TextField(null=True)  # noqa: A003
     hash_algorithm = models.CharField(max_length=32, null=True)
     icon_url = models.URLField(null=True)
     is_absolute_latest_version = models.BooleanField(default=True)
@@ -100,14 +100,14 @@ class Package(models.Model):
     nuget_id = models.CharField(max_length=128)
     project_url = models.URLField()
     published = models.DateTimeField(auto_now_add=True, blank=True)
-    references = models.JSONField(default=dict)  # type: ignore[var-annotated]
+    references = models.JSONField(default=dict)
     release_notes = models.TextField(null=True)
     require_license_acceptance = models.BooleanField(default=False)
     size = models.PositiveIntegerField()
     source_url = models.URLField(null=True)
     summary = models.TextField(null=True)
-    tags = models.ManyToManyField(Tag)  # type: ignore[var-annotated]
-    title = models.CharField(max_length=255)
+    tags = models.ManyToManyField(Tag)
+    title: models.CharField[str] = models.CharField(max_length=255)
     uploader = models.ForeignKey(NugetUser, on_delete=models.CASCADE)
     version = models.CharField(max_length=128)
     version0 = models.PositiveIntegerField()

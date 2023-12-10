@@ -1,7 +1,7 @@
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 from .lex import LexToken, Lexer
-
 
 class YaccProduction:
     lexer: Lexer | None
@@ -10,7 +10,7 @@ class YaccProduction:
         ...
 
     def __iter__(self) -> Iterator[Any]:
-        """Not really in the class. Only here for typing when doing destructured assignment."""
+        # Not really in the class. Only here for typing when doing destructured assignment.
         ...
 
     def __getitem__(self, indices: tuple[int, ...] | int) -> Any:
@@ -48,7 +48,7 @@ class YaccProduction:
 
 
 class Parser:
-    def parse(self, input: str, debug: bool = ...) -> Any:
+    def parse(self, input: str, debug: bool = ...) -> Any:  # noqa: A002
         ...
 
 
