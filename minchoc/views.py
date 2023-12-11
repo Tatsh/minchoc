@@ -1,7 +1,7 @@
 import logging
 import re
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any, cast
@@ -19,8 +19,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .constants import FEED_XML_POST, FEED_XML_PRE
-from .filteryacc import FIELD_MAPPING
-from .filteryacc import parser as filter_parser
+from .filteryacc import FIELD_MAPPING, parser as filter_parser
 from .models import Author, NugetUser, Package, Tag
 from .utils import make_entry, tag_text_or
 
@@ -97,7 +96,7 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
             for x in Package._default_manager.filter(nuget_id=request.GET['id'].replace('\'', '')))
         return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
             'BASEURL': proto_host,
-            'UPDATED': datetime.now(timezone.utc).isoformat()
+            'UPDATED': datetime.now(UTC).isoformat()
         },
                             content_type='application/xml')
     except KeyError:
@@ -133,7 +132,7 @@ def packages(request: HttpRequest) -> HttpResponse:
         for x in Package._default_manager.order_by(order_by).filter(filters)[0:20])
     return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
         'BASEURL': proto_host,
-        'UPDATED': datetime.now(timezone.utc).isoformat()
+        'UPDATED': datetime.now(UTC).isoformat()
     },
                         content_type='application/xml')
 
@@ -151,7 +150,7 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
         content = make_entry(proto_host, package)
         return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
             'BASEURL': proto_host,
-            'UPDATED': datetime.now(timezone.utc).isoformat()
+            'UPDATED': datetime.now(UTC).isoformat()
         },
                             content_type='application/xml')
     return HttpResponseNotFound()
