@@ -244,7 +244,6 @@ extend-ignore-names = ["_base_manager", "_default_manager", "_meta"]
 case-sensitive = true
 combine-as-imports = true
 
-
 [tool.yapf]
 align_closing_bracket_with_visual_indent = true
 allow_multiline_dictionary_keys = false
