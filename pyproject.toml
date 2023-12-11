@@ -12,7 +12,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Topic :: System :: Software Distribution",
-  "Typing :: Typed"
+  "Typing :: Typed",
 ]
 description = "Minimal Chocolatey-compatible NuGet server in a Django app."
 documentation = "https://minchoc.readthedocs.io/en/latest/"
@@ -74,6 +74,9 @@ tag_format = "v$version"
 version_files = ["README.md", "minchoc/__init__.py", "package.json"]
 version_provider = "poetry"
 
+[tool.coverage.run]
+omit = ["minchoc/wsgi.py"]
+
 [tool.cruft]
 skip = [
   "./*.lock",
@@ -95,8 +98,12 @@ skip = [
   "htmlcov/",
   "man/",
   "mb8611/",
-  "node_modules/"
+  "node_modules/",
 ]
+
+[tool.django-stubs]
+django_settings_module = "minchoc"
+ignore_missing_settings = true
 
 [tool.mypy]
 exclude = ['^minchoc/parsetab.py$']
@@ -106,6 +113,7 @@ disallow_untyped_defs = true
 disallow_untyped_decorators = true
 disallow_subclassing_any = true
 mypy_path = "./.stubs"
+plugins = ["mypy_django_plugin.main"]
 show_column_numbers = true
 show_error_codes = true
 strict_equality = true
@@ -212,7 +220,7 @@ extend-select = [
   "TD",
   "TRY",
   "UP",
-  "YTT"
+  "YTT",
 ]
 exclude = ["parsetab.py"]
 line-length = 100
@@ -222,6 +230,9 @@ unsafe-fixes = true
 [tool.ruff.flake8-quotes]
 inline-quotes = "single"
 multiline-quotes = "single"
+
+[tool.ruff.lint.flake8-self]
+extend-ignore-names = ["_base_manager", "_default_manager", "_meta"]
 
 [tool.ruff.lint.isort]
 case-sensitive = true

@@ -93,6 +93,7 @@ mypy
 needmessage
 netrc
 nistp
+noqa
 numpy
 nuspecs
 objectdb
@@ -153,6 +154,7 @@ somename
 speedintitle
 speedlistdl
 speedlistul
+sphinxdoc
 sponsorblock
 standarderror
 status_forcelist
@@ -171,6 +173,7 @@ tolower
 tomlkit
 tryfirst
 typecheck
+typeshed
 udvare
 unexpectedru
 unichr
