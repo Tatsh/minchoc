@@ -13,6 +13,7 @@ backoff
 basestring
 bootloader
 builtins
+choc
 choco
 classmethod
 cmdclass
@@ -34,6 +35,7 @@ direnv
 distutils
 docparams
 docstrings
+doctrees
 docutils
 ecda
 editmsg
@@ -62,6 +64,7 @@ hsplit
 htmlcov
 idiv
 ignoreerrors
+imal
 infojson
 inlinevar
 islatestversion
@@ -78,6 +81,7 @@ lexdata
 lexer
 lexpos
 lexspan
+liners
 linespan
 loguru
 lunchy
@@ -98,6 +102,7 @@ numpy
 nuspecs
 objectdb
 offtopic
+olatey
 oneshot
 optparse
 outro

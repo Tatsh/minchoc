@@ -46,8 +46,8 @@
         "description": "Minimal Chocolatey-compatible NuGet server in a Django app."
       },
       "repository_name": "minchoc",
-      "want_main": true,
-      "want_requests": true,
+      "want_main": false,
+      "want_requests": false,
       "year": "2023"
     }
   },
