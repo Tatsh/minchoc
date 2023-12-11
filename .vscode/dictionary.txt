@@ -83,6 +83,7 @@ lexpos
 lexspan
 liners
 linespan
+linters
 loguru
 lunchy
 maxdepth
@@ -114,7 +115,6 @@ parseable
 parsetab
 pathlib
 pgpass
-pipx
 pipx
 plabel
 pluggy
