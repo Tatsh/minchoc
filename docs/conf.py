@@ -1,6 +1,6 @@
 """See https://www.sphinx-doc.org/en/master/usage/configuration.html"""  # noqa: INP001
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from operator import itemgetter
 from pathlib import Path
 from typing import Final
@@ -19,7 +19,7 @@ with (Path(__file__).parent.parent / 'pyproject.toml').open() as f:
 sys.path.insert(0, str(Path(__file__).parent.parent))
 # endregion
 author: Final[str] = authors[0]
-copyright: Final[str] = str(datetime.now(timezone.utc).year)  # noqa: A001
+copyright: Final[str] = str(datetime.now(UTC).year)  # noqa: A001
 project: Final[str] = name
 release: Final[str] = f'v{version}'
 extensions: Final[list[str]] = (['sphinx.ext.autodoc', 'sphinx.ext.napoleon'] +
@@ -29,7 +29,6 @@ master_doc: Final[str] = 'index'
 html_static_path: Final[list[str]] = []
 html_theme: Final[str] = 'sphinxdoc'
 templates_path: Final[list[str]] = ['_templates']
-
 settings.configure(INSTALLED_APPS=[
     'django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
     'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles', 'minchoc'
