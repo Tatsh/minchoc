@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "minchoc"
-version = "0.0.10"
+version = "0.0.11"
 authors = ["Andrew Udvare <audvare@gmail.com>"]
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -13,7 +13,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Topic :: System :: Software Distribution",
-  "Typing :: Typed"
+  "Typing :: Typed",
 ]
 description = "Minimal Chocolatey-compatible NuGet server in a Django app."
 documentation = "https://minchoc.readthedocs.io/"
@@ -100,7 +100,7 @@ skip = [
   "htmlcov/",
   "man/",
   "minchoc/",
-  "node_modules/"
+  "node_modules/",
 ]
 
 [tool.django-stubs]
@@ -226,7 +226,7 @@ extend-select = [
   "TD",
   "TRY",
   "UP",
-  "YTT"
+  "YTT",
 ]
 line-length = 100
 target-version = "py311"

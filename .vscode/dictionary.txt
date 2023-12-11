@@ -130,6 +130,7 @@ pychoco
 pylance
 pylint
 pypackages
+pyright
 pytest
 pytype
 ratelimit

@@ -7,7 +7,7 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/minchoc)
 ![GitHub tag (with filter)](https://img.shields.io/github/v/tag/Tatsh/minchoc)
 ![GitHub](https://img.shields.io/github/license/Tatsh/minchoc)
-![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/minchoc/v0.0.10/master)
+![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/minchoc/v0.0.11/master)
 
 **Min**imal **Choc**olatey-compatible NuGet server in a Django app.
 
