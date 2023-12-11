@@ -230,13 +230,13 @@ content-type: application/zip\r
     assert re.search(GALLERY_RE, response.content) is not None
     assert response.status_code == HTTPStatus.OK
     # fetch_package_file
-    package = Package.objects.filter(nuget_id='somename').first()
+    package = Package._default_manager.filter(nuget_id='somename').first()
     assert package is not None
     assert package.download_count == 0
     response = client.get('/api/v2/package/somename/1.0.2')
     assert response.get('content-type') == 'application/zip'
     assert response.status_code == HTTPStatus.OK
-    package = Package.objects.filter(nuget_id='somename').first()
+    package = Package._default_manager.filter(nuget_id='somename').first()
     assert package is not None
     assert package.download_count == 1
     response = client.delete('/api/v2/package/somename/1.0.2')
@@ -246,6 +246,5 @@ content-type: application/zip\r
     response = client.delete('/api/v2/package/somename/1.0.2')
     assert response.status_code == HTTPStatus.FORBIDDEN
     response = client.delete('/api/v2/package/somename/1.0.2',
-                             headers={'x-nuget-apikey':
-                                 nuget_user.token.hex})  # type: ignore[arg-type]
+                             headers={'x-nuget-apikey': nuget_user.token.hex})
     assert response.status_code == HTTPStatus.NO_CONTENT

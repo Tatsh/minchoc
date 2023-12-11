@@ -1,4 +1,5 @@
-from typing import Any, Literal
+from collections.abc import Sequence
+from typing import Any, Literal, cast
 
 from django.db.models import Q
 from ply import yacc
@@ -28,7 +29,7 @@ def p_substringof(p: yacc.YaccProduction) -> None:
     a: str
     b: Q
     _, __, ___, a, ____, b, _____ = p
-    db_field = b.children[0][0]
+    db_field = cast(Sequence[Any], b.children[0])[0]
     prefix = ''
     if '__iexact' in db_field:
         prefix = 'i'
@@ -68,12 +69,15 @@ def p_expression_op(p: yacc.YaccProduction) -> None:
     op: Literal['and', 'eq', 'ne', 'or']
     _, a, op, b = p
     if op == 'and':
+        assert isinstance(b, Q)
         p[0] &= a & b
     elif op == 'or':
+        assert isinstance(b, Q)
         p[0] &= a | b
     else:
-        db_field: str = a.children[0][0]
-        if b == 'null' or (b.children[0][0] if isinstance(b, Q) else None) == 'rhs__isnull':
+        db_field: str = cast(Sequence[Any], a.children[0])[0]
+        if b == 'null' or (cast(Sequence[Any], b.children[0])[0]
+                           if isinstance(b, Q) else None) == 'rhs__isnull':
             p[0] &= Q(**{f'{db_field}__isnull': op != 'ne'})
         else:  # eq
             if not isinstance(b, int | str):

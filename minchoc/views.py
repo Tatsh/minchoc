@@ -4,15 +4,15 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from defusedxml.ElementTree import parse as parse_xml
 from django.conf import settings
 from django.core.files import File
 from django.db import IntegrityError
+from django.db.models import Field, ForeignObjectRel
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, JsonResponse
 from django.http.multipartparser import MultiPartParserError
-from django.http.response import HttpResponseBase
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -23,6 +23,10 @@ from .filteryacc import FIELD_MAPPING
 from .filteryacc import parser as filter_parser
 from .models import Author, NugetUser, Package, Tag
 from .utils import make_entry, tag_text_or
+
+if TYPE_CHECKING:
+    from _typeshed import SupportsKeysAndGetItem
+    from django.core.files.uploadedfile import UploadedFile
 
 NUSPEC_NAMESPACES = {'': 'http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd'}
 NUSPEC_FIELD_AUTHORS = 'authors'
@@ -90,7 +94,7 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
     try:
         content = '\n'.join(
             make_entry(proto_host, x)
-            for x in Package.objects.filter(nuget_id=request.GET['id'].replace('\'', '')))
+            for x in Package._default_manager.filter(nuget_id=request.GET['id'].replace('\'', '')))
         return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
             'BASEURL': proto_host,
             'UPDATED': datetime.now(timezone.utc).isoformat()
@@ -125,7 +129,8 @@ def packages(request: HttpRequest) -> HttpResponse:
     proto = 'https' if request.is_secure() else 'http'
     proto_host = f'{proto}://{request.get_host()}'
     content = '\n'.join(
-        make_entry(proto_host, x) for x in Package.objects.order_by(order_by).filter(filters)[0:20])
+        make_entry(proto_host, x)
+        for x in Package._default_manager.order_by(order_by).filter(filters)[0:20])
     return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
         'BASEURL': proto_host,
         'UPDATED': datetime.now(timezone.utc).isoformat()
@@ -140,7 +145,7 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
 
     Sample URL: ``/Packages(Id='name',Version='123.0.0')``
     """
-    if (package := Package.objects.filter(nuget_id=name, version=version).first()):
+    if (package := Package._default_manager.filter(nuget_id=name, version=version).first()):
         proto = 'https' if request.is_secure() else 'http'
         proto_host = f'{proto}://{request.get_host()}'
         content = make_entry(proto_host, package)
@@ -163,13 +168,13 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
     This also handles deletions. Deletions will only be allowed with authentication and with
     ``settings.ALLOW_PACKAGE_DELETION`` set to ``True``.
     """
-    if (package := Package.objects.filter(nuget_id=name, version=version).first()):
+    if (package := Package._default_manager.filter(nuget_id=name, version=version).first()):
         if request.method == 'GET':
             with package.file.open('rb') as f:
                 package.download_count += 1
                 package.save()
                 return HttpResponse(f.read(), content_type='application/zip')
-        if request.method == 'DELETE' and settings.ALLOW_PACKAGE_DELETION:
+        if request.method == 'DELETE' and settings.ALLOW_PACKAGE_DELETION:  # type: ignore[misc]
             if not NugetUser.request_has_valid_token(request):
                 return JsonResponse({'error': 'Not authorized'}, status=403)
             package.file.delete()
@@ -181,11 +186,11 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
 
 @method_decorator(csrf_exempt, name='dispatch')
 class APIV2PackageView(View):
-    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponseBase:
+    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         """Checks if a user is authorised before allowing the request to continue."""
         if not NugetUser.request_has_valid_token(request):
             return JsonResponse({'error': 'Not authorized'}, status=403)
-        return super().dispatch(request, *args, **kwargs)
+        return cast(HttpResponse, super().dispatch(request, *args, **kwargs))
 
     def put(self, request: HttpRequest) -> HttpResponse:
         """Upload a package. This must be a multipart upload with a single valid NuGet file."""
@@ -196,12 +201,13 @@ class APIV2PackageView(View):
             _, files = request.parse_file_upload(request.META, request)
         except MultiPartParserError:
             return JsonResponse({'error': 'Invalid upload'}, status=400)
-        request.FILES.update(files)
+        request.FILES.update(cast('SupportsKeysAndGetItem[str, UploadedFile]', files))
         if len(request.FILES) == 0:
             return JsonResponse({'error': 'No files sent'}, status=400)
         if len(request.FILES) > 1:
             return JsonResponse({'error': 'More than one file sent'}, status=400)
         nuget_file = list(request.FILES.values())[0]
+        assert not isinstance(nuget_file, list)
         if not zipfile.is_zipfile(nuget_file):
             return JsonResponse({'error': 'Not a zip file'}, status=400)
         with zipfile.ZipFile(nuget_file) as z:
@@ -226,20 +232,21 @@ class APIV2PackageView(View):
             if not value:  # pragma no cover
                 logger.warning('No value for key %s', key)
                 continue
-            column_type = (None if column_name not in PACKAGE_FIELDS else
-                           PACKAGE_FIELDS[column_name].get_internal_type())
+            column_type = (None if column_name not in PACKAGE_FIELDS else cast(
+                Field[Any, Any]
+                | ForeignObjectRel, PACKAGE_FIELDS[column_name]).get_internal_type())
             if not column_type or column_type == 'ManyToManyField':
                 if column_name == 'tags':
                     assert value is not None
                     tags = [x.strip() for x in re.split(r'\s+', value)]
                     for name in tags:
-                        new_tag, _ = Tag.objects.filter(name=name).get_or_create(name=name)
+                        new_tag, _ = Tag._default_manager.filter(name=name).get_or_create(name=name)
                         new_tag.save()
                         add_tags.append(new_tag)
                 elif column_name == 'authors':
                     authors = [x.strip() for x in re.split(',', value)]
                     for name in authors:
-                        new_author, _ = Author.objects.get_or_create(name=name)
+                        new_author, _ = Author._default_manager.get_or_create(name=name)
                         new_author.save()
                         add_authors.append(new_author)
                 else:  # pragma no cover
@@ -256,9 +263,10 @@ class APIV2PackageView(View):
             new_package.version3 = int(version_split[3])
         except IndexError:
             pass
-        new_package.size = nuget_file.size
+        new_package.size = cast(int, nuget_file.size)
         new_package.file = File(nuget_file, nuget_file.name)
-        uploader = NugetUser.objects.filter(token=request.headers['x-nuget-apikey']).first()
+        uploader = NugetUser._default_manager.filter(
+            token=request.headers['x-nuget-apikey']).first()
         assert uploader is not None
         new_package.uploader = uploader
         try:

@@ -9,7 +9,7 @@ __all__ = ('make_entry', 'tag_text_or')
 
 def make_entry(host: str, package: Package, ending: str = '\n') -> str:
     """Creates a package ``<entry>`` element for a package XML feed."""
-    total_downloads = Package.objects.filter(nuget_id=package.nuget_id).aggregate(
+    total_downloads = Package._default_manager.filter(nuget_id=package.nuget_id).aggregate(
         total_downloads=Sum('download_count'))['total_downloads']
     return f'''<entry>
     <id>{host}/api/v2/Packages(Id='{package.nuget_id}',Version='{package.version}')</id>
