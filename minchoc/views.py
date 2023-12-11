@@ -23,7 +23,7 @@ from .filteryacc import FIELD_MAPPING, parser as filter_parser
 from .models import Author, NugetUser, Package, Tag
 from .utils import make_entry, tag_text_or
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from _typeshed import SupportsKeysAndGetItem
     from django.core.files.uploadedfile import UploadedFile
 
