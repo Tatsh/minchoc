@@ -1,11 +1,11 @@
-import re
-import zipfile
 from http import HTTPStatus
 from tempfile import NamedTemporaryFile
+import re
+import zipfile
 
-import pytest
 from django.conf import settings
 from django.test import Client
+import pytest
 
 from minchoc.models import NugetUser, Package
 

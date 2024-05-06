@@ -1,12 +1,12 @@
 """Configuration for Pytest."""
-import os
 from pathlib import Path
 from shutil import rmtree
 from typing import NoReturn
 from uuid import uuid4
+import os
 
-import pytest
 from django.conf import settings
+import pytest
 
 DJANGO_APP_DIR = Path(f'test_django{uuid4().hex}')
 

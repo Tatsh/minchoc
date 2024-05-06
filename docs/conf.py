@@ -1,13 +1,13 @@
 """See https://www.sphinx-doc.org/en/master/usage/configuration.html"""  # noqa: INP001
-import sys
 from datetime import UTC, datetime
 from operator import itemgetter
 from pathlib import Path
 from typing import Final
+import sys
 
+from django.conf import settings
 import django
 import tomlkit
-from django.conf import settings
 
 with (Path(__file__).parent.parent / 'pyproject.toml').open() as f:
     poetry = tomlkit.load(f).unwrap()['tool']['poetry']

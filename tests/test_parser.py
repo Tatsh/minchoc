@@ -1,8 +1,8 @@
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, cast
 
-import pytest
 from django.utils.tree import Node
+import pytest
 
 from minchoc.filteryacc import InvalidTypeForEq, parser
 

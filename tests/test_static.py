@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
-import pytest
 from django.test import Client
+import pytest
 
 
 def test_home(client: Client) -> None:
