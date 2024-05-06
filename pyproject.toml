@@ -36,7 +36,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 commitizen = "^3.9.1"
 cruft = "^2.15.0"
-django-stubs = "^4.2.7"
+django-stubs = "^5.0"
 mypy = "^1.5.1"
 pre-commit = "^3.6.0"
 rope = "^1.9.0"
