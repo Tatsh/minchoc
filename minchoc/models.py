@@ -1,23 +1,21 @@
 import uuid
-from typing import Any, Self, cast
+from typing import Any, cast
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models.manager import BaseManager
 from django.db.models.signals import post_save
 from django.http import HttpRequest
+from django_stubs_ext.db.models import TypedModelMeta
 
 __all__ = ('Author', 'Company', 'NugetUser', 'Package')
 
 
 class Company(models.Model):
     """Company associated to NuGet packages."""
-    class Meta:
+    class Meta(TypedModelMeta):
         verbose_name = 'company'
         verbose_name_plural = 'companies'
-
-    objects: BaseManager[Self]
 
     name = models.CharField(max_length=255, unique=True)
 
@@ -77,7 +75,7 @@ class Tag(models.Model):
 
 class Package(models.Model):
     """An instance of a NuGet package."""
-    class Meta:
+    class Meta(TypedModelMeta):
         constraints = [
             models.UniqueConstraint(fields=('nuget_id', 'version'), name='id_and_version_uniq')
         ]

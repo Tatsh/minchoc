@@ -27,7 +27,7 @@ repository = "https://github.com/Tatsh/minchoc"
 python = ">=3.11,<4"
 defusedxml = "^0.7.1"
 django = "^5.0"
-django-stubs-ext = "^4.2.7"
+django-stubs-ext = "^5.0"
 ply = "^3.11"
 
 [tool.poetry.group.dev]
@@ -240,7 +240,7 @@ multiline-quotes = "single"
 extend-ignore-names = ["_base_manager", "_default_manager", "_meta"]
 
 [tool.ruff.lint.isort]
-# from-first = true
+from-first = true
 case-sensitive = true
 combine-as-imports = true
 
