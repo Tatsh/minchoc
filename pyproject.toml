@@ -43,7 +43,7 @@ rope = "^1.9.0"
 ruff = ">=0.5.0,<0.8.0"
 toml = "^0.10.2"
 types-toml = "^0.10.8.7"
-yapf = "^0.40.1"
+yapf = ">=0.40.1,<0.44.0"
 
 [tool.poetry.group.docs]
 optional = true
