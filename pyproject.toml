@@ -34,7 +34,7 @@ ply = "^3.11"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-commitizen = "^3.9.1"
+commitizen = ">=3.9.1,<5.0.0"
 cruft = "^2.15.0"
 django-stubs = "^5.0"
 mypy = "^1.5.1"
