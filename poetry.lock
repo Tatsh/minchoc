@@ -485,24 +485,24 @@ bcrypt = ["bcrypt"]
 
 [[package]]
 name = "django-stubs"
-version = "5.1.1"
+version = "5.1.2"
 description = "Mypy stubs for Django"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "django_stubs-5.1.1-py3-none-any.whl", hash = "sha256:c4dc64260bd72e6d32b9e536e8dd0d9247922f0271f82d1d5132a18f24b388ac"},
-    {file = "django_stubs-5.1.1.tar.gz", hash = "sha256:126d354bbdff4906c4e93e6361197f6fbfb6231c3df6def85a291dae6f9f577b"},
+    {file = "django_stubs-5.1.2-py3-none-any.whl", hash = "sha256:04ddc778faded6fb48468a8da9e98b8d12b9ba983faa648d37a73ebde0f024da"},
+    {file = "django_stubs-5.1.2.tar.gz", hash = "sha256:a0fcb3659bab46a6d835cc2d9bff3fc29c36ccea41a10e8b1930427bc0f9f0df"},
 ]
 
 [package.dependencies]
 asgiref = "*"
 django = "*"
-django-stubs-ext = ">=5.1.1"
+django-stubs-ext = ">=5.1.2"
 types-PyYAML = "*"
 typing-extensions = ">=4.11.0"
 
 [package.extras]
-compatible-mypy = ["mypy (>=1.12,<1.14)"]
+compatible-mypy = ["mypy (>=1.12,<1.15)"]
 oracle = ["oracledb"]
 redis = ["redis"]
 
