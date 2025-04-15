@@ -1,11 +1,17 @@
-from collections.abc import Sequence
-from typing import Any, Literal, cast
+# ruff: noqa: D205
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from django.db.models import Q
 from ply import yacc
-from ply.lex import LexToken
 
 from minchoc.filterlex import tokens  # noqa: F401
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from ply.lex import LexToken
 
 __all__ = ('FIELD_MAPPING', 'parser')
 
@@ -18,18 +24,18 @@ def setup_p0(p: yacc.YaccProduction) -> None:
 
 
 def p_expression_expr(p: yacc.YaccProduction) -> None:
-    """expression : LPAREN expression RPAREN"""
+    """Expression : LPAREN expression RPAREN."""
     setup_p0(p)
     p[0] = p[2]
 
 
 def p_substringof(p: yacc.YaccProduction) -> None:
-    """substringof : SUBSTRINGOF LPAREN STRING COMMA expression RPAREN"""
+    """Substringof : SUBSTRINGOF LPAREN STRING COMMA expression RPAREN."""
     setup_p0(p)
     a: str
     b: Q
     _, __, ___, a, ____, b, _____ = p
-    db_field = cast(Sequence[Any], b.children[0])[0]
+    db_field = cast('Sequence[Any]', b.children[0])[0]
     prefix = ''
     if '__iexact' in db_field:
         prefix = 'i'
@@ -38,7 +44,7 @@ def p_substringof(p: yacc.YaccProduction) -> None:
 
 
 def p_tolower(p: yacc.YaccProduction) -> None:
-    """tolower : TOLOWER LPAREN FIELD RPAREN"""
+    """Tolower : TOLOWER LPAREN FIELD RPAREN."""
     setup_p0(p)
     field: Literal['Description', 'Id', 'Tags']
     _, __, ___, field, ____ = p
@@ -46,7 +52,7 @@ def p_tolower(p: yacc.YaccProduction) -> None:
 
 
 def p_expression_field(p: yacc.YaccProduction) -> None:
-    """expression : FIELD"""
+    """Expression : FIELD."""
     setup_p0(p)
     field: Literal['Description', 'Id', 'Tags']
     _, field = p
@@ -59,10 +65,11 @@ class InvalidTypeForEq(Exception):
 
 
 def p_expression_op(p: yacc.YaccProduction) -> None:
-    """expression : expression OR expression
-                  | expression AND expression
-                  | expression NE expression
-                  | expression EQ expression"""
+    """Expression : expression OR expression
+    | expression AND expression
+    | expression NE expression
+    | expression EQ expression.
+    """
     setup_p0(p)
     a: Q
     b: Q | str
@@ -75,8 +82,8 @@ def p_expression_op(p: yacc.YaccProduction) -> None:
         assert isinstance(b, Q)
         p[0] &= a | b
     else:
-        db_field: str = cast(Sequence[Any], a.children[0])[0]
-        if b == 'null' or (cast(Sequence[Any], b.children[0])[0]
+        db_field: str = cast('Sequence[Any]', a.children[0])[0]
+        if b == 'null' or (cast('Sequence[Any]', b.children[0])[0]
                            if isinstance(b, Q) else None) == 'rhs__isnull':
             p[0] &= Q(**{f'{db_field}__isnull': op != 'ne'})
         else:  # eq
@@ -86,7 +93,7 @@ def p_expression_op(p: yacc.YaccProduction) -> None:
 
 
 def p_expression_str(p: yacc.YaccProduction) -> None:
-    """expression : STRING"""
+    """Expression : STRING."""
     setup_p0(p)
     s: str
     _, s = p
@@ -94,15 +101,16 @@ def p_expression_str(p: yacc.YaccProduction) -> None:
 
 
 class GenericSyntaxError(SyntaxError):
-    def __init__(self, index: int, token: str):
+    def __init__(self, index: int, token: str) -> None:
         super().__init__(f'Syntax error (index: {index}, token: "{token}")')
 
 
 def p_expression(p: yacc.YaccProduction) -> None:
-    """expression : NULL
-                  | substringof
-                  | tolower
-                  | ISLATESTVERSION"""
+    """Expression : NULL
+    | substringof
+    | tolower
+    | ISLATESTVERSION.
+    """
     setup_p0(p)
     expr: Any
     _, expr = p

@@ -1,3 +1,4 @@
+# ruff: noqa: E303
 from typing import Any
 
 class Lexer:
@@ -15,7 +16,7 @@ class Lexer:
 
 class LexToken:
     lexer: Lexer
-    type: Any  # noqa: A003
+    type: Any
     value: Any
 
 

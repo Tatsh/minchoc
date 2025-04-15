@@ -1,21 +1,20 @@
+from minchoc.models import Company, NugetUser, Package, Tag
 import pytest
 
-from minchoc.models import Company, NugetUser, Package, Tag
 
-
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_company_str() -> None:
     company = Company._default_manager.create(name='Company name')
     assert str(company) == 'Company name'
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_tag_str() -> None:
     tag = Tag._default_manager.create(name='Tag name')
     assert str(tag) == 'Tag name'
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_package_str(nuget_user: NugetUser) -> None:
     package = Package._default_manager.create(nuget_id='somename',
                                               title='somename',
@@ -27,16 +26,15 @@ def test_package_str(nuget_user: NugetUser) -> None:
     assert str(package) == 'somename 123.0'
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_nuget_user_str(nuget_user: NugetUser) -> None:
     nuget_user.base.username = 'fakename'
     assert str(nuget_user) == 'fakename'
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_only_one_nuget_user_is_created_on_first_save() -> None:
     from django.contrib.auth.models import User
-
     from minchoc.models import NugetUser
     user = User._default_manager.create()
     assert user is not None

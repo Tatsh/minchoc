@@ -30,5 +30,5 @@ class Migration(migrations.Migration):
             model_name='package',
             name='version_download_count',
         ),
-        migrations.DeleteModel(name='PackageVersionDownloadCount',),
+        migrations.DeleteModel(name='PackageVersionDownloadCount'),
     ]

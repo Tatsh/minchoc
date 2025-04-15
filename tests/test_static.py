@@ -1,7 +1,12 @@
-from http import HTTPStatus
+from __future__ import annotations
 
-from django.test import Client
+from http import HTTPStatus
+from typing import TYPE_CHECKING
+
 import pytest
+
+if TYPE_CHECKING:
+    from django.test import Client
 
 
 def test_home(client: Client) -> None:
@@ -11,14 +16,14 @@ def test_home(client: Client) -> None:
     assert response.status_code == HTTPStatus.OK
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_metadata(client: Client) -> None:
     response = client.get('/$metadata')
     assert response.get('content-type') == 'application/xml'
     assert response.status_code == HTTPStatus.OK
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_metadata_alt(client: Client) -> None:
     response = client.get('/api/v2/$metadata')
     assert response.get('content-type') == 'application/xml'

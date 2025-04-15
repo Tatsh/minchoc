@@ -4,10 +4,9 @@ from typing import Any
 import pytest
 
 
-@pytest.fixture()
+@pytest.fixture
 def nuget_user() -> Iterator[Any]:
     from django.contrib.auth.models import User
-
     from minchoc.models import NugetUser
     user = User._default_manager.create()
     assert user is not None

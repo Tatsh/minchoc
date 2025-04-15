@@ -32,9 +32,9 @@ def pytest_configure(config: pytest.Config) -> None:
     rmtree(DJANGO_APP_DIR, ignore_errors=True)
     DJANGO_APP_DIR.mkdir(parents=True)
     with (DJANGO_APP_DIR / 'urls.py').open('w') as f:
-        f.write('''from django.contrib import admin
+        f.write("""from django.contrib import admin
 from django.urls import include, path
-urlpatterns = [path('', include('minchoc.urls'))]''')
+urlpatterns = [path('', include('minchoc.urls'))]""")
     settings.configure(
         ALLOW_PACKAGE_DELETION=False,
         ALLOWED_HOSTS=[],

@@ -1,59 +1,64 @@
+from __future__ import annotations
+
 from http import HTTPStatus
+from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import TYPE_CHECKING
 import re
 import zipfile
 
 from django.conf import settings
-from django.test import Client
+from minchoc.models import NugetUser, Package
 import pytest
 
-from minchoc.models import NugetUser, Package
+if TYPE_CHECKING:
+    from django.test import Client
 
 GALLERY_RE = br'/package/somename/1.0.2</d:Gallery'
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_packages_invalid_syntax(client: Client) -> None:
     response = client.get('/Packages()',
                           QUERY_STRING='$filter=(tolower(Id) eq somename) and IsLatestVersion')
     assert response.status_code != HTTPStatus.OK
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_packages_with_args_not_found(client: Client) -> None:
     response = client.get("/Packages(Id='fake',Version='123.0.0')",
                           QUERY_STRING='$filter=(tolower(Id) eq somename) and IsLatestVersion')
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_fetch_package_file(client: Client) -> None:
     response = client.get('/api/v2/package/fake/123.0.0')
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_put_not_authorized(client: Client) -> None:
     response = client.put('/api/v2/package/')
     assert response.json()['error'] == 'Not authorized'
     assert response.status_code == HTTPStatus.FORBIDDEN
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_post_not_authorized(client: Client) -> None:
     response = client.put('/api/v2/package/')
     assert response.json()['error'] == 'Not authorized'
     assert response.status_code == HTTPStatus.FORBIDDEN
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_put_invalid_content_type_unknown(client: Client, nuget_user: NugetUser) -> None:
     response = client.put('/api/v2/package/', headers={'x-nuget-apikey': nuget_user.token.hex})
     assert response.json()['error'] == 'Invalid content type: unknown'
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_put_invalid_content_type_set(client: Client, nuget_user: NugetUser) -> None:
     response = client.put('/api/v2/package/',
                           'nothing',
@@ -63,7 +68,7 @@ def test_put_invalid_content_type_set(client: Client, nuget_user: NugetUser) -> 
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_put_no_boundary(client: Client, nuget_user: NugetUser) -> None:
     response = client.put('/api/v2/package/',
                           'nothing',
@@ -73,7 +78,7 @@ def test_put_no_boundary(client: Client, nuget_user: NugetUser) -> None:
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_put_no_files(client: Client, nuget_user: NugetUser) -> None:
     response = client.put('/api/v2/package/',
                           'nothing',
@@ -83,9 +88,9 @@ def test_put_no_files(client: Client, nuget_user: NugetUser) -> None:
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_put_too_many_files(client: Client, nuget_user: NugetUser) -> None:
-    content = '''--1234abc
+    content = """--1234abc
 content-disposition: form-data; name="upload"; filename="file1.txt"
 content-type: text/plain
 
@@ -95,7 +100,7 @@ content-disposition: form-data; name="upload1"; filename="file2.txt"
 content-type: text/plain
 
 Some data2
---1234abc--'''.replace('\n', '\r\n')
+--1234abc--""".replace('\n', '\r\n')
     response = client.put('/api/v2/package/',
                           content,
                           'multipart/form-data; boundary=1234abc',
@@ -107,14 +112,14 @@ Some data2
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_put_not_zip_file(client: Client, nuget_user: NugetUser) -> None:
-    content = '''--1234abc
+    content = """--1234abc
 content-disposition: form-data; name="upload"; filename="file1.txt"
 content-type: text/plain
 
 Some data
---1234abc--'''.replace('\n', '\r\n')
+--1234abc--""".replace('\n', '\r\n')
     response = client.put('/api/v2/package/',
                           content,
                           'multipart/form-data; boundary=1234abc',
@@ -131,21 +136,20 @@ def test_find_package_invalid_req(client: Client) -> None:
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_put_too_many_nuspecs_post(client: Client, nuget_user: NugetUser) -> None:
     with NamedTemporaryFile('rb', prefix='minchoc_test', suffix='.zip') as tf:
         temp_name = tf.name
     with zipfile.ZipFile(temp_name, 'w') as z:
         z.writestr('a.nuspec', '')
         z.writestr('b.nuspec', 'aaa')
-    with open(temp_name, 'rb') as f:
-        content = f.read()
-    content = b'''--1234abc\r
+    content = Path(temp_name).read_bytes()
+    content = b"""--1234abc\r
 content-disposition: form-data; name="upload"; filename="a.zip"\r
 content-type: application/zip\r
 \r
-''' + content + b'''\r
---1234abc--'''
+""" + content + b"""\r
+--1234abc--"""
     response = client.post('/api/v2/package/',
                            content,
                            'multipart/form-data; boundary=1234abc',
@@ -164,7 +168,7 @@ def test_put(client: Client, nuget_user: NugetUser) -> None:
         temp_name = tf.name
     with zipfile.ZipFile(temp_name, 'w') as z:
         z.writestr(
-            'a.nuspec', '''<?xml version="1.0" encoding="utf-8"?>
+            'a.nuspec', """<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>somename</id>
@@ -179,15 +183,14 @@ def test_put(client: Client, nuget_user: NugetUser) -> None:
     <tags>tag1 tag2</tags>
     <packageSourceUrl>https://a-url-can-be-same-as-project</packageSourceUrl>
   </metadata>
-</package>''')
-    with open(temp_name, 'rb') as f:
-        content = f.read()
-    content = b'''--1234abc\r
+</package>""")
+    content = Path(temp_name).read_bytes()
+    content = b"""--1234abc\r
 content-disposition: form-data; name="upload"; filename="a.zip"\r
 content-type: application/zip\r
 \r
-''' + content + b'''\r
---1234abc--'''
+""" + content + b"""\r
+--1234abc--"""
     response = client.put('/api/v2/package/',
                           content,
                           'multipart/form-data; boundary=1234abc',

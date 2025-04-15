@@ -1,3 +1,4 @@
+# ruff: noqa: E303
 from collections.abc import Iterator
 from typing import Any
 

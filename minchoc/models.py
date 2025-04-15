@@ -1,23 +1,28 @@
-from typing import Any, cast
+# ruff: noqa: DJ001
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, cast
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.signals import post_save
-from django.http import HttpRequest
 from django_stubs_ext.db.models import TypedModelMeta
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractUser
+    from django.http import HttpRequest
 
 __all__ = ('Author', 'Company', 'NugetUser', 'Package')
 
 
 class Company(models.Model):
     """Company associated to NuGet packages."""
+    name = models.CharField(max_length=255, unique=True)
+
     class Meta(TypedModelMeta):
         verbose_name = 'company'
         verbose_name_plural = 'companies'
-
-    name = models.CharField(max_length=255, unique=True)
 
     def __str__(self) -> str:
         return self.name
@@ -29,24 +34,22 @@ class NugetUser(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
     token = models.UUIDField()
 
+    def __str__(self) -> str:
+        return cast('str', self.base.username)
+
     @staticmethod
     def token_exists(token: str | None) -> bool:
-        """Simple method to check if a token exists."""
+        """Check if a token exists."""
         return bool(token and NugetUser._default_manager.filter(token=token).exists())
 
     @staticmethod
     def request_has_valid_token(request: HttpRequest) -> bool:
-        """
-        Checks if the API key in the request (header ``X-NuGet-ApiKey``, case insensitive) is valid.
-        """
+        """Check if the API key in the request is valid."""
         return NugetUser.token_exists(request.headers.get('X-NuGet-ApiKey'))
-
-    def __str__(self) -> str:
-        return cast(str, self.base.username)
 
 
 def post_save_receiver(sender: AbstractUser, instance: AbstractUser, **kwargs: Any) -> None:
-    """Callback to create a ``NugetUser`` when a new user is saved."""
+    """Create a ``NugetUser`` when a new user is saved."""
     if not NugetUser._default_manager.filter(base=instance).exists():
         nuget_user = NugetUser()
         nuget_user.base = instance
@@ -75,18 +78,13 @@ class Tag(models.Model):
 
 class Package(models.Model):
     """An instance of a NuGet package."""
-    class Meta(TypedModelMeta):
-        constraints = [
-            models.UniqueConstraint(fields=('nuget_id', 'version'), name='id_and_version_uniq')
-        ]
-
     authors = models.ManyToManyField(Author)
-    copyright = models.TextField(null=True)  # noqa: A003
+    copyright = models.TextField(null=True)
     dependencies = models.JSONField(null=True)
     description = models.TextField(null=True)
     download_count = models.PositiveBigIntegerField(default=0)
     file = models.FileField(upload_to='packages')
-    hash = models.TextField(null=True)  # noqa: A003
+    hash = models.TextField(null=True)
     hash_algorithm = models.CharField(max_length=32, null=True)
     icon_url = models.URLField(null=True)
     is_absolute_latest_version = models.BooleanField(default=True)
@@ -103,7 +101,7 @@ class Package(models.Model):
     size = models.PositiveIntegerField()
     source_url = models.URLField(null=True)
     summary = models.TextField(null=True)
-    tags = models.ManyToManyField(Tag)
+    tags = models.ManyToManyField(Tag)  # type: ignore[var-annotated]
     title = models.CharField(max_length=255)
     uploader = models.ForeignKey(NugetUser, on_delete=models.CASCADE)
     version = models.CharField(max_length=128)
@@ -112,6 +110,11 @@ class Package(models.Model):
     version2 = models.PositiveIntegerField(null=True)
     version3 = models.PositiveIntegerField(null=True)
     version_beta = models.CharField(max_length=128, null=True)
+
+    class Meta(TypedModelMeta):
+        constraints = [  # noqa: RUF012
+            models.UniqueConstraint(fields=('nuget_id', 'version'), name='id_and_version_uniq')
+        ]
 
     def __str__(self) -> str:
         return f'{self.title} {self.version}'
