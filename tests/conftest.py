@@ -25,6 +25,8 @@ if os.getenv('_PYTEST_RAISE', '0') != '0':  # pragma no cover
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    if os.environ.get('CI') == 'true':
+        return
     rmtree(DJANGO_APP_DIR)
 
 
@@ -32,9 +34,9 @@ def pytest_configure(config: pytest.Config) -> None:
     rmtree(DJANGO_APP_DIR, ignore_errors=True)
     DJANGO_APP_DIR.mkdir(parents=True)
     with (DJANGO_APP_DIR / 'urls.py').open('w') as f:
-        f.write('''from django.contrib import admin
+        f.write("""from django.contrib import admin
 from django.urls import include, path
-urlpatterns = [path('', include('minchoc.urls'))]''')
+urlpatterns = [path('', include('minchoc.urls'))]""")
     settings.configure(
         ALLOW_PACKAGE_DELETION=False,
         ALLOWED_HOSTS=[],

@@ -1,11 +1,17 @@
-from collections.abc import Sequence
-from typing import Any, Literal, cast
+# ruff: noqa: D205,D208,D209,D400,D403
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from django.db.models import Q
 from ply import yacc
-from ply.lex import LexToken
 
 from minchoc.filterlex import tokens  # noqa: F401
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from ply.lex import LexToken
 
 __all__ = ('FIELD_MAPPING', 'parser')
 
@@ -29,7 +35,7 @@ def p_substringof(p: yacc.YaccProduction) -> None:
     a: str
     b: Q
     _, __, ___, a, ____, b, _____ = p
-    db_field = cast(Sequence[Any], b.children[0])[0]
+    db_field = cast('Sequence[Any]', b.children[0])[0]
     prefix = ''
     if '__iexact' in db_field:
         prefix = 'i'
@@ -75,8 +81,8 @@ def p_expression_op(p: yacc.YaccProduction) -> None:
         assert isinstance(b, Q)
         p[0] &= a | b
     else:
-        db_field: str = cast(Sequence[Any], a.children[0])[0]
-        if b == 'null' or (cast(Sequence[Any], b.children[0])[0]
+        db_field: str = cast('Sequence[Any]', a.children[0])[0]
+        if b == 'null' or (cast('Sequence[Any]', b.children[0])[0]
                            if isinstance(b, Q) else None) == 'rhs__isnull':
             p[0] &= Q(**{f'{db_field}__isnull': op != 'ne'})
         else:  # eq
@@ -94,7 +100,7 @@ def p_expression_str(p: yacc.YaccProduction) -> None:
 
 
 class GenericSyntaxError(SyntaxError):
-    def __init__(self, index: int, token: str):
+    def __init__(self, index: int, token: str) -> None:
         super().__init__(f'Syntax error (index: {index}, token: "{token}")')
 
 

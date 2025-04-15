@@ -1,7 +1,9 @@
+# ruff: noqa: E303,I001
 from collections.abc import Iterator
 from typing import Any
 
 from .lex import LexToken, Lexer
+
 
 class YaccProduction:
     lexer: Lexer | None

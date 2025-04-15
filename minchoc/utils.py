@@ -1,17 +1,22 @@
-from xml.etree.ElementTree import Element
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from django.db.models import Sum
 
 from .models import Package
 
+if TYPE_CHECKING:
+    from xml.etree.ElementTree import Element  # noqa: S405
+
 __all__ = ('make_entry', 'tag_text_or')
 
 
 def make_entry(host: str, package: Package, ending: str = '\n') -> str:
-    """Creates a package ``<entry>`` element for a package XML feed."""
+    """Create a package ``<entry>`` element for a package XML feed."""
     total_downloads = Package._default_manager.filter(nuget_id=package.nuget_id).aggregate(
         total_downloads=Sum('download_count'))['total_downloads']
-    return f'''<entry>
+    return f"""<entry>
     <id>{host}/api/v2/Packages(Id='{package.nuget_id}',Version='{package.version}')</id>
     <category term="NuGetGallery.V2FeedPackage"
         scheme="http://schemas.microsoft.com/ado/2007/08/dataservices/scheme" />
@@ -55,7 +60,7 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
         <d:Version>{package.version}</d:Version>
         <d:VersionDownloadCount m:type="Edm.Int32">{package.download_count}</d:VersionDownloadCount>
     </m:properties>
-</entry>{ending}'''  # noqa: E501
+</entry>{ending}"""  # noqa: E501
 
 
 def tag_text_or(tag: Element | None, default: str | None = None) -> str | None:

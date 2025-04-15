@@ -1,3 +1,4 @@
+# ruff: noqa: D300,D400,N816
 from typing import Any
 
 from ply import lex
@@ -43,7 +44,7 @@ def t_string_escapedquote(_t: lex.LexToken) -> None:
 def t_string_quote(t: lex.LexToken) -> lex.LexToken:
     r"'"
     t.value = t.lexer.lexdata[t.lexer.code_start:t.lexer.lexpos - 1]
-    t.type = "STRING"
+    t.type = 'STRING'
     t.lexer.lineno += t.value.count('\n')
     t.lexer.begin('INITIAL')
     return t

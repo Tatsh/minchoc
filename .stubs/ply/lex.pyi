@@ -1,4 +1,6 @@
+# ruff: noqa: E303,I001
 from typing import Any
+
 
 class Lexer:
     code_start: int
@@ -15,7 +17,7 @@ class Lexer:
 
 class LexToken:
     lexer: Lexer
-    type: Any  # noqa: A003
+    type: Any
     value: Any
 
 
