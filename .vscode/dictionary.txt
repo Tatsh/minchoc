@@ -49,7 +49,9 @@ linespan
 macprefs
 minchoc
 modindex
+multiline
 mypy
+noninfringement
 norecursedirs
 nugetuser
 numpy
@@ -73,6 +75,7 @@ sessionfinish
 skiptoken
 somename
 sphinxcontrib
+sublicense
 substringof
 tabversion
 tatsh
