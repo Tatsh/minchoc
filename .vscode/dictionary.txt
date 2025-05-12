@@ -2,6 +2,7 @@ apikey
 apiv
 autodoc
 automodule
+bsky
 choc
 choco
 codeowners
