@@ -115,7 +115,7 @@ commitizen = "^4.7.0"
 django-stubs = "^5.2.0"
 djlint = "^1.36.4"
 mypy = ">=1.12,<1.16"
-ruff = "^0.11.9"
+ruff = "^0.11.10"
 yapf = "^0.43.0"
 
 [tool.poetry.group.docs]
