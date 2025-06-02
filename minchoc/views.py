@@ -229,6 +229,7 @@ class APIV2PackageView(View):
         new_package = Package()
         add_tags = []
         add_authors = []
+        assert root is not None
         metadata = root[0]
         for key, column_name in NUSPEC_FIELD_MAPPINGS.items():
             value = tag_text_or(metadata.find(key, NUSPEC_NAMESPACES))
