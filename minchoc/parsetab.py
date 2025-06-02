@@ -5,7 +5,7 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'AND COMMA EQ FIELD ISLATESTVERSION LPAREN NE NULL OR RPAREN STRING SUBSTRINGOF TOLOWERexpression : LPAREN expression RPARENsubstringof : SUBSTRINGOF LPAREN STRING COMMA expression RPARENtolower : TOLOWER LPAREN FIELD RPARENexpression : FIELDexpression : expression OR expression\n                  | expression AND expression\n                  | expression NE expression\n                  | expression EQ expressionexpression : STRINGexpression : NULL\n                  | substringof\n                  | tolower\n                  | ISLATESTVERSION'
+_lr_signature = 'AND COMMA EQ FIELD ISLATESTVERSION LPAREN NE NULL OR RPAREN STRING SUBSTRINGOF TOLOWERexpression : LPAREN expression RPARENsubstringof : SUBSTRINGOF LPAREN STRING COMMA expression RPARENtolower : TOLOWER LPAREN FIELD RPARENexpression : FIELDexpression : expression OR expression\n| expression AND expression\n| expression NE expression\n| expression EQ expressionexpression : STRINGexpression : NULL\n| substringof\n| tolower\n| ISLATESTVERSION'
 
 _lr_action_items = {
     'LPAREN': ([
@@ -418,22 +418,22 @@ del _lr_goto_items
 _lr_productions = [
     ("S' -> expression", "S'", 1, None, None, None),
     ('expression -> LPAREN expression RPAREN', 'expression', 3, 'p_expression_expr',
-     'filteryacc.py', 22),
+     'filteryacc.py', 27),
     ('substringof -> SUBSTRINGOF LPAREN STRING COMMA expression RPAREN', 'substringof', 6,
-     'p_substringof', 'filteryacc.py', 28),
-    ('tolower -> TOLOWER LPAREN FIELD RPAREN', 'tolower', 4, 'p_tolower', 'filteryacc.py', 40),
-    ('expression -> FIELD', 'expression', 1, 'p_expression_field', 'filteryacc.py', 50),
+     'p_substringof', 'filteryacc.py', 33),
+    ('tolower -> TOLOWER LPAREN FIELD RPAREN', 'tolower', 4, 'p_tolower', 'filteryacc.py', 47),
+    ('expression -> FIELD', 'expression', 1, 'p_expression_field', 'filteryacc.py', 55),
     ('expression -> expression OR expression', 'expression', 3, 'p_expression_op', 'filteryacc.py',
-     59),
+     68),
     ('expression -> expression AND expression', 'expression', 3, 'p_expression_op', 'filteryacc.py',
-     60),
+     69),
     ('expression -> expression NE expression', 'expression', 3, 'p_expression_op', 'filteryacc.py',
-     61),
+     70),
     ('expression -> expression EQ expression', 'expression', 3, 'p_expression_op', 'filteryacc.py',
-     62),
-    ('expression -> STRING', 'expression', 1, 'p_expression_str', 'filteryacc.py', 75),
-    ('expression -> NULL', 'expression', 1, 'p_expression', 'filteryacc.py', 84),
-    ('expression -> substringof', 'expression', 1, 'p_expression', 'filteryacc.py', 85),
-    ('expression -> tolower', 'expression', 1, 'p_expression', 'filteryacc.py', 86),
-    ('expression -> ISLATESTVERSION', 'expression', 1, 'p_expression', 'filteryacc.py', 87),
+     71),
+    ('expression -> STRING', 'expression', 1, 'p_expression_str', 'filteryacc.py', 95),
+    ('expression -> NULL', 'expression', 1, 'p_expression', 'filteryacc.py', 108),
+    ('expression -> substringof', 'expression', 1, 'p_expression', 'filteryacc.py', 109),
+    ('expression -> tolower', 'expression', 1, 'p_expression', 'filteryacc.py', 110),
+    ('expression -> ISLATESTVERSION', 'expression', 1, 'p_expression', 'filteryacc.py', 111),
 ]
