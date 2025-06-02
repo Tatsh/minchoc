@@ -16,7 +16,6 @@ defusedxml
 djlint
 doctrees
 eeyore
-erdantic
 esbenp
 esbonio
 escapedquote
@@ -47,12 +46,11 @@ lexspan
 lextudio
 libjsonnet
 linespan
+linters
 macprefs
 minchoc
 modindex
-multiline
 mypy
-noninfringement
 norecursedirs
 nugetuser
 numpy
@@ -71,12 +69,12 @@ pyproject
 pyright
 pytest
 regen
+rstcheck
 schemafile
 sessionfinish
 skiptoken
 somename
 sphinxcontrib
-sublicense
 substringof
 tabversion
 tatsh

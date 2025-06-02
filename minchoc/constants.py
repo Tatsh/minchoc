@@ -1,3 +1,6 @@
+"""Constants."""
+from __future__ import annotations
+
 __all__ = ('FEED_XML_POST', 'FEED_XML_PRE')
 
 FEED_XML_PRE = """<?xml version="1.0" encoding="utf-8" standalone="yes"?>
@@ -9,4 +12,14 @@ FEED_XML_PRE = """<?xml version="1.0" encoding="utf-8" standalone="yes"?>
     <title type="text">Packages</title>
     <updated>%(UPDATED)s</updated>
     <link rel="self" title="Packages" href="Packages" />"""
+"""
+Feed XML preamble.
+
+:meta hide-value:
+"""
 FEED_XML_POST = '</feed>'
+"""
+Feed XML file suffix.
+
+:meta hide-value:
+"""

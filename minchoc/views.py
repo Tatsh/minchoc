@@ -1,3 +1,6 @@
+"""Views."""
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -188,6 +191,7 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
 
 @method_decorator(csrf_exempt, name='dispatch')
 class APIV2PackageView(View):
+    """API V2 package upload view."""
     @override
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         """Check if a user is authorised before allowing the request to continue."""

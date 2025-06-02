@@ -1,4 +1,7 @@
+"""Lexer."""
 # ruff: noqa: D300,D400,N816
+from __future__ import annotations
+
 from typing import Any
 
 from ply import lex

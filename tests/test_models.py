@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from minchoc.models import Company, NugetUser, Package, Tag
 import pytest
 

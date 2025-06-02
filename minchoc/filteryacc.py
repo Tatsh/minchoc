@@ -1,12 +1,12 @@
+"""Parser."""
 # ruff: noqa: D205,D208,D209,D400,D403
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from django.db.models import Q
-from ply import yacc
-
 from minchoc.filterlex import tokens  # noqa: F401
+from ply import yacc
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -68,7 +68,7 @@ def p_expression_op(p: yacc.YaccProduction) -> None:
     """expression : expression OR expression
                   | expression AND expression
                   | expression NE expression
-                  | expression EQ expression"""
+                  | expression EQ expression"""  # noqa: DOC501
     setup_p0(p)
     a: Q
     b: Q | str

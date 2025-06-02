@@ -1,4 +1,6 @@
 """Configuration for Pytest."""
+from __future__ import annotations
+
 from pathlib import Path
 from shutil import rmtree
 from typing import NoReturn

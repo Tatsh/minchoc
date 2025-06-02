@@ -1,4 +1,5 @@
-# ruff: noqa: DJ001
+"""Model definitions."""
+# ruff: noqa: D106, DJ001
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast

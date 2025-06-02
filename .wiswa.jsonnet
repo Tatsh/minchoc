@@ -41,13 +41,13 @@ local utils = import 'utils.libjsonnet';
       poetry+: {
         dependencies+: {
           defusedxml: '^0.7.1',
-          django: '^5.2',
-          'django-stubs-ext': '^5.1.3',
+          django: '^5.2.1',
+          'django-stubs-ext': '^5.2.0',
           ply: '^3.11',
         },
         group+: {
           dev+: {
-            dependencies+: { 'django-stubs': '^5.1.3' },
+            dependencies+: { 'django-stubs': '^5.2.0' },
           },
           tests+: {
             dependencies+: {
