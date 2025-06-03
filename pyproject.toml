@@ -52,12 +52,28 @@ version_provider = "pep621"
 
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:"]
-omit = ["conftest.py", "tests.py", "tests/test_*.py", "migrations/", "test_django*/", "wsgi.py"]
+omit = [
+  "conftest.py",
+  "tests.py",
+  "tests/test_*.py",
+  "migrations/*",
+  "parsetab.py",
+  "test_django*/*",
+  "wsgi.py",
+]
 show_missing = true
 
 [tool.coverage.run]
 branch = true
-omit = ["conftest.py", "tests.py", "tests/test_*.py", "migrations/", "test_django*/", "wsgi.py"]
+omit = [
+  "conftest.py",
+  "tests.py",
+  "tests/test_*.py",
+  "migrations/*",
+  "parsetab.py",
+  "test_django*/*",
+  "wsgi.py",
+]
 
 [tool.django-stubs]
 django_settings_module = "minchoc"

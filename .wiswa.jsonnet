@@ -23,10 +23,10 @@ local utils = import 'utils.libjsonnet';
     tool+: {
       coverage+: {
         report+: {
-          omit+: ['migrations/', 'test_django*/', 'wsgi.py'],
+          omit+: ['migrations/*', 'parsetab.py', 'test_django*/*', 'wsgi.py'],
         },
         run+: {
-          omit+: ['migrations/', 'test_django*/', 'wsgi.py'],
+          omit+: ['migrations/*', 'parsetab.py', 'test_django*/*', 'wsgi.py'],
         },
       },
       'django-stubs': {
