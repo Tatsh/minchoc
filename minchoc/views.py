@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any, cast
@@ -205,7 +206,7 @@ class APIV2PackageView(View):
             return JsonResponse(
                 {'error': f'Invalid content type: {request.content_type or "unknown"}'}, status=400)
         try:
-            _, files = request.parse_file_upload(request.META, request)
+            _, files = request.parse_file_upload(request.META, BytesIO(request.body))
         except MultiPartParserError:
             return JsonResponse({'error': 'Invalid upload'}, status=400)
         request.FILES.update(cast('SupportsKeysAndGetItem[str, UploadedFile]', files))
