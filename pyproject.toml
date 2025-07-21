@@ -118,7 +118,7 @@ optional = true
 commitizen = "^4.8.3"
 django-stubs = "^5.2.1"
 djlint = "^1.36.4"
-mypy = "^1.16.1"
+mypy = "^1.17.0"
 ruff = "^0.12.3"
 yapf = "^0.43.0"
 
