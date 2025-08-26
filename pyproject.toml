@@ -109,7 +109,7 @@ django = "^5.2.5"
 django-stubs-ext = "^5.2.2"
 ply = "^3.11"
 python = ">=3.10,<3.14"
-typing-extensions = "^4.14.1"
+typing-extensions = "^4.15.0"
 
 [tool.poetry.group.dev]
 optional = true
