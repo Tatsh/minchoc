@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 -->
+<!-- markdownlint-configure-file {"MD024": { "siblings_only": true } } -->
 
 # Changelog
 
@@ -42,3 +42,6 @@ and this project adheres to
 ### Removed
 
 - Removed `WANT_NUGET_HOME` setting
+
+[0.0.11]: https://github.com/Tatsh/minchoc/compare/v0.0.10...v0.0.11
+[0.0.6]: https://github.com/Tatsh/minchoc/compare/v0.0.5...v0.0.6
