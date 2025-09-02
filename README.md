@@ -1,5 +1,6 @@
 # minchoc
 
+[![Published on Django Packages](https://img.shields.io/badge/Published%20on-Django%20Packages-0c3c26)](https://djangopackages.org/packages/p/minchoc/)
 [![Python versions](https://img.shields.io/pypi/pyversions/minchoc.svg?color=blue&logo=python&logoColor=white)](https://www.python.org/)
 [![PyPI - Version](https://img.shields.io/pypi/v/minchoc)](https://pypi.org/project/minchoc/)
 [![GitHub tag (with filter)](https://img.shields.io/github/v/tag/Tatsh/minchoc)](https://github.com/Tatsh/minchoc/tags)
