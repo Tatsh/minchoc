@@ -106,7 +106,7 @@ warn_unreachable = true
 [tool.poetry.dependencies]
 defusedxml = "^0.7.1"
 django = "^5.2.6"
-django-stubs-ext = "^5.2.2"
+django-stubs-ext = "^5.2.5"
 ply = "^3.11"
 python = ">=3.10,<3.14"
 typing-extensions = "^4.15.0"
