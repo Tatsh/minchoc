@@ -116,7 +116,7 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 commitizen = "^4.9.1"
-django-stubs = "^5.2.2"
+django-stubs = "^5.2.5"
 djlint = "^1.36.4"
 mypy = "^1.18.1"
 ruff = "^0.12.12"
