@@ -52,7 +52,10 @@ class NugetUser(models.Model):
         return NugetUser.token_exists(request.headers.get('X-NuGet-ApiKey'))
 
 
-def post_save_receiver(sender: AbstractUser, instance: AbstractUser, **kwargs: Any) -> None:
+def post_save_receiver(
+        sender: AbstractUser,  # noqa: ARG001
+        instance: AbstractUser,
+        **kwargs: Any) -> None:  # noqa: ARG001
     """Create a ``NugetUser`` when a new user is saved."""
     if not NugetUser._default_manager.filter(base=instance).exists():
         nuget_user = NugetUser()

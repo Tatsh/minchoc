@@ -89,8 +89,6 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
 
     Sample URL: ``/FindPackagesById()?id=package-name``
     """
-    # TODO Handle $skiptoken ``$skiptoken='Vivaldi','1.13.971.8-snapshot'`` # noqa: FIX002
-    # (alternative way to paginate)
     if (sem_ver_level := request.GET.get('semVerLevel')):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
     proto = 'https' if request.is_secure() else 'http'
@@ -200,7 +198,7 @@ class APIV2PackageView(View):
             return JsonResponse({'error': 'Not authorized'}, status=403)
         return cast('HttpResponse', super().dispatch(request, *args, **kwargs))
 
-    def put(self, request: HttpRequest) -> HttpResponse:  # noqa: PLR0911
+    def put(self, request: HttpRequest) -> HttpResponse:  # noqa: PLR6301
         """Upload a package. This must be a multipart upload with a single valid NuGet file."""
         if not request.content_type or not request.content_type.startswith('multipart/'):
             return JsonResponse(

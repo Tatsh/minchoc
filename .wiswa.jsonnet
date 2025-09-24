@@ -1,6 +1,6 @@
 local utils = import 'utils.libjsonnet';
 
-(import 'defaults.libjsonnet') + {
+{
   // Project-specific
   description: 'Minimal Chocolatey-compatible NuGet server in a Django app.',
   keywords: ['chocolatey', 'django', 'windows'],
@@ -40,10 +40,10 @@ local utils = import 'utils.libjsonnet';
       },
       poetry+: {
         dependencies+: {
-          defusedxml: '^0.7.1',
-          django: '^5.2.1',
-          'django-stubs-ext': '^5.2.0',
-          ply: '^3.11',
+          defusedxml: utils.latestPypiPackageVersionCaret('defusedxml'),
+          django: utils.latestPypiPackageVersionCaret('django'),
+          'django-stubs-ext': utils.latestPypiPackageVersionCaret('django-stubs-ext'),
+          ply: utils.latestPypiPackageVersionCaret('ply'),
         },
         group+: {
           dev+: {
@@ -51,7 +51,7 @@ local utils = import 'utils.libjsonnet';
           },
           tests+: {
             dependencies+: {
-              'pytest-django': '^4.11.1',
+              'pytest-django': utils.latestPypiPackageVersionCaret('pytest-django'),
             },
           },
         },
@@ -66,23 +66,7 @@ local utils = import 'utils.libjsonnet';
       },
     },
   },
-  skip+: ['tests/test_main.py', 'tests/test_utils.py', 'macprefs/utils.py'],
-  // Common
-  authors: [
-    {
-      'family-names': 'Udvare',
-      'given-names': 'Andrew',
-      email: 'audvare@gmail.com',
-      name: '%s %s' % [self['given-names'], self['family-names']],
-    },
-  ],
-  local funding_name = '%s2' % std.asciiLower(self.github_username),
-  github_username: 'Tatsh',
-  github+: {
-    funding+: {
-      ko_fi: funding_name,
-      liberapay: funding_name,
-      patreon: funding_name,
-    },
+  copilot+: {
+    intro: 'minchoc is a MINimal CHOColatey-compatible server app for Django.',
   },
 }

@@ -39,14 +39,16 @@ homepage = "https://tatsh.github.io/minchoc/"
 repository = "https://github.com/Tatsh/minchoc"
 
 [tool.commitizen]
+name = "cz_path"
+remove_path_prefixes = ["include", "minchoc", "src"]
 tag_format = "v$version"
 version_files = [
   ".wiswa.jsonnet",
   "CITATION.cff",
   "README.md",
   "docs/index.rst",
-  "package.json",
   "minchoc/__init__.py",
+  "package.json",
 ]
 version_provider = "pep621"
 
@@ -104,6 +106,7 @@ strict_optional = true
 warn_unreachable = true
 
 [tool.poetry.dependencies]
+bascom = "^0.0.1"
 defusedxml = "^0.7.1"
 django = "^5.2.6"
 django-stubs-ext = "^5.2.5"
@@ -116,9 +119,10 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 commitizen = "^4.9.1"
-django-stubs = "^5.2.5"
+cz-path = "^0.0.1"
+django-stubs = "^5.2.0"
 djlint = "^1.36.4"
-mypy = "^1.18.1"
+mypy = "^1.18.2"
 ruff = "^0.13.1"
 yapf = "^0.43.0"
 
@@ -128,7 +132,7 @@ optional = true
 [tool.poetry.group.docs.dependencies]
 autodoc-pydantic = "^2.2.0"
 doc8 = "^2.0.0"
-docutils = "^0.21.2"
+docutils = "<0.22"
 esbonio = "^0.16.5"
 numpydoc = "^1.9.0"
 restructuredtext-lint = "^1.4.0"
@@ -143,7 +147,7 @@ version = "^0.13.0"
 
 [[tool.poetry.group.docs.dependencies.sphinx]]
 python = ">=3.11"
-version = "^8.2.0"
+version = "^8.2.3"
 
 [[tool.poetry.group.docs.dependencies.sphinx]]
 python = "<3.11"
@@ -157,11 +161,15 @@ mock = "^5.2.0"
 pytest = "^8.4.2"
 pytest-cov = "^7.0.0"
 pytest-django = "^4.11.1"
-pytest-mock = "^3.15.0"
+pytest-mock = "^3.15.1"
 
 [tool.poetry.group.tests.dependencies.coveralls]
 python = "<3.13"
 version = "^4.0.1"
+
+[[tool.poetry.include]]
+format = "sdist"
+path = "tests"
 
 [[tool.poetry.packages]]
 include = "minchoc"
@@ -261,12 +269,7 @@ extend-select = [
   "YTT",
 ]
 ignore = [
-  "A005",
   "ANN401",
-  "ARG001",
-  "ARG002",
-  "ARG004",
-  "C901",
   "COM812",
   "CPY001",
   "D201",
@@ -274,25 +277,18 @@ ignore = [
   "D204",
   "D212",
   "DOC201",
-  "EM101",
   "N818",
-  "PLR0912",
-  "PLR0913",
-  "PLR0914",
-  "PLR0915",
-  "PLR0917",
-  "PLR1702",
-  "PLR6301",
   "S101",
   "S404",
   "S603",
   "TD002",
-  "TD003",
-  "TD004",
   "UP046",
   "UP047",
 ]
 preview = true
+
+[tool.ruff.lint.flake8-builtins]
+allowed-modules = ["types", "typing"]
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "single"
@@ -308,11 +304,23 @@ from-first = true
 required-imports = ["from __future__ import annotations"]
 section-order = ["future", "standard-library", "third-party", "local-folder"]
 
+[tool.ruff.lint.mccabe]
+max-complexity = 20
+
 [tool.ruff.lint.pep8-naming]
 extend-ignore-names = ["test_*"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+[tool.ruff.lint.pylint]
+max-args = 20
+max-branches = 20
+max-locals = 20
+max-positional-args = 15
+max-public-methods = 30
+max-returns = 10
+max-statements = 100
 
 [tool.yapf]
 align_closing_bracket_with_visual_indent = true
