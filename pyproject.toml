@@ -109,7 +109,7 @@ warn_unreachable = true
 bascom = "^0.0.2"
 defusedxml = "^0.7.1"
 django = "^5.2.7"
-django-stubs-ext = "^5.2.5"
+django-stubs-ext = "^5.2.6"
 ply = "^3.11"
 python = ">=3.10,<3.14"
 typing-extensions = "^4.15.0"
