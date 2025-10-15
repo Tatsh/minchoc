@@ -106,7 +106,7 @@ strict_optional = true
 warn_unreachable = true
 
 [tool.poetry.dependencies]
-bascom = "^0.0.2"
+bascom = "^0.0.3"
 defusedxml = "^0.7.1"
 django = "^5.2.7"
 django-stubs-ext = "^5.2.7"
