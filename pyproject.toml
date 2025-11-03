@@ -123,7 +123,7 @@ cz-path = "^0.0.2"
 django-stubs = "^5.2.0"
 djlint = "^1.36.4"
 mypy = "^1.18.2"
-ruff = "^0.14.0"
+ruff = "^0.14.3"
 yapf = "^0.43.0"
 
 [tool.poetry.group.docs]
@@ -138,7 +138,7 @@ numpydoc = "^1.9.0"
 restructuredtext-lint = "^1.4.0"
 sphinx-datatables = "^0.3.1"
 sphinx-hoverxref = "^1.4.2"
-sphinx-immaterial = "^0.13.7"
+sphinx-immaterial = "^0.13.8"
 tomlkit = "^0.13.3"
 
 [tool.poetry.group.docs.dependencies.enum-tools]
