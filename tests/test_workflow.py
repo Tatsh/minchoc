@@ -191,29 +191,29 @@ content-type: application/zip\r
     # Test without skiptoken - should return all versions
     response = client.get('/FindPackagesById()?id=TestPackage')
     assert response.status_code == HTTPStatus.OK
-    content = response.content.decode()
+    content_s = response.content.decode()
     # Check all versions are present
     for version in versions:
-        assert f'<d:Version>{version}</d:Version>' in content
+        assert f'<d:Version>{version}</d:Version>' in content_s
 
     # Test with skiptoken - should skip versions up to and including 1.0.1
     response = client.get("/FindPackagesById()?id=TestPackage&$skiptoken='TestPackage','1.0.1'")
     assert response.status_code == HTTPStatus.OK
-    content = response.content.decode()
+    content_s = response.content.decode()
     # Versions 1.0.0 and 1.0.1 should NOT be present
-    assert '<d:Version>1.0.0</d:Version>' not in content
-    assert '<d:Version>1.0.1</d:Version>' not in content
+    assert '<d:Version>1.0.0</d:Version>' not in content_s
+    assert '<d:Version>1.0.1</d:Version>' not in content_s
     # Versions 1.0.2 and 1.0.3 should be present
-    assert '<d:Version>1.0.2</d:Version>' in content
-    assert '<d:Version>1.0.3</d:Version>' in content
+    assert '<d:Version>1.0.2</d:Version>' in content_s
+    assert '<d:Version>1.0.3</d:Version>' in content_s
 
     # Test with skiptoken at the end - should return empty or no matching versions
     response = client.get("/FindPackagesById()?id=TestPackage&$skiptoken='TestPackage','1.0.3'")
     assert response.status_code == HTTPStatus.OK
-    content = response.content.decode('utf-8')
+    content_s = response.content.decode()
     # All versions should NOT be present
     for version in versions:
-        assert f'<d:Version>{version}</d:Version>' not in content
+        assert f'<d:Version>{version}</d:Version>' not in content_s
 
 
 @pytest.mark.django_db

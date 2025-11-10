@@ -115,15 +115,21 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
                 # We order by version and filter out versions up to and including skip_version
                 queryset = queryset.order_by('version')
                 # Get all packages and filter those after the skip_version
-                all_packages = list(queryset)
+                all_packages: list[Package] = list(queryset)
                 skip_index = -1
                 for i, pkg in enumerate(all_packages):
                     if pkg.nuget_id == skip_id and pkg.version == skip_version:
                         skip_index = i
                         break
-                queryset = all_packages[skip_index + 1 :] if skip_index >= 0 else all_packages
-            else:
-                logger.warning('Invalid $skiptoken format: %s', skiptoken)
+                # Use the list directly for iteration, mypy is happy with this
+                packages_list = all_packages[skip_index + 1 :] if skip_index >= 0 else all_packages
+                content = '\n'.join(make_entry(proto_host, x) for x in packages_list)
+                return HttpResponse(
+                    f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
+                    % {'BASEURL': proto_host, 'UPDATED': datetime.now(timezone.utc).isoformat()},
+                    content_type='application/xml',
+                )
+            logger.warning('Invalid $skiptoken format: %s', skiptoken)
 
         content = '\n'.join(make_entry(proto_host, x) for x in queryset)
         return HttpResponse(
@@ -256,8 +262,9 @@ class APIV2PackageView(View):
             if len(nuspecs) > 1 or not nuspecs:
                 return JsonResponse(
                     {
-                        'error': 'There should be exactly 1 nuspec file present. 0 or more than 1 were '
-                        'found.'
+                        'error':
+                            'There should be exactly 1 nuspec file present. 0 or more than 1 '
+                            'were found.'
                     },
                     status=400,
                 )
