@@ -14,7 +14,7 @@ import pytest
 if TYPE_CHECKING:
     from django.test import Client
 
-GALLERY_RE = br'/package/somename/1.0.2</d:Gallery'
+GALLERY_RE = rb'/package/somename/1.0.2</d:Gallery'
 
 
 @pytest.mark.django_db
@@ -136,6 +136,93 @@ def test_find_package_invalid_req(client: Client) -> None:
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.django_db(transaction=True)
+def test_find_packages_by_id_with_skiptoken(client: Client, nuget_user: NugetUser) -> None:
+    """Test $skiptoken parameter in find_packages_by_id view."""
+    # Create multiple versions of the same package
+    from pathlib import Path
+    from tempfile import NamedTemporaryFile
+    import zipfile
+
+    versions = ['1.0.0', '1.0.1', '1.0.2', '1.0.3']
+    for version in versions:
+        with NamedTemporaryFile('rb', prefix='minchoc_test', suffix='.nuget') as tf:
+            temp_name = tf.name
+        with zipfile.ZipFile(temp_name, 'w') as z:
+            z.writestr(
+                'test.nuspec', f"""<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>TestPackage</id>
+    <version>{version}</version>
+    <title>Test Package</title>
+    <authors>Test Author</authors>
+    <owners>Test Owner</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectUrl>https://test.example.com</projectUrl>
+    <description>Test description</description>
+    <summary>Test summary</summary>
+    <tags>test</tags>
+    <packageSourceUrl>https://test.example.com</packageSourceUrl>
+  </metadata>
+</package>""")
+        content = Path(temp_name).read_bytes()
+        content = (b"""--1234abc\r
+content-disposition: form-data; name="upload"; filename="test.zip"\r
+content-type: application/zip\r
+\r
+""" + content + b"""\r
+--1234abc--""")
+        response = client.put(
+            '/package/',
+            content,
+            'multipart/form-data; boundary=1234abc',
+            headers={
+                'content-length': f'{len(content)}',
+                'x-nuget-apikey': nuget_user.token.hex
+            },
+        )
+        assert response.status_code == HTTPStatus.CREATED
+
+    # Test without skiptoken - should return all versions
+    response = client.get('/FindPackagesById()?id=TestPackage')
+    assert response.status_code == HTTPStatus.OK
+    content_s = response.content.decode()
+    # Check all versions are present
+    for version in versions:
+        assert f'<d:Version>{version}</d:Version>' in content_s
+
+    # Test with skiptoken - should skip versions up to and including 1.0.1
+    response = client.get("/FindPackagesById()?id=TestPackage&$skiptoken='TestPackage','1.0.1'")
+    assert response.status_code == HTTPStatus.OK
+    content_s = response.content.decode()
+    # Versions 1.0.0 and 1.0.1 should NOT be present
+    assert '<d:Version>1.0.0</d:Version>' not in content_s
+    assert '<d:Version>1.0.1</d:Version>' not in content_s
+    # Versions 1.0.2 and 1.0.3 should be present
+    assert '<d:Version>1.0.2</d:Version>' in content_s
+    assert '<d:Version>1.0.3</d:Version>' in content_s
+
+    # Test with skiptoken at the end - should return empty or no matching versions
+    response = client.get("/FindPackagesById()?id=TestPackage&$skiptoken='TestPackage','1.0.3'")
+    assert response.status_code == HTTPStatus.OK
+    content_s = response.content.decode()
+    # All versions should NOT be present
+    for version in versions:
+        assert f'<d:Version>{version}</d:Version>' not in content_s
+
+
+@pytest.mark.django_db(transaction=True)
+def test_find_packages_by_id_with_skiptoken_no_packages_found(client: Client) -> None:
+    """Test $skiptoken parameter in find_packages_by_id view when no packages are found."""
+    response = client.get(
+        "/FindPackagesById()?id=NonExistentPackage&$skiptoken='NonExistentPackage','1.0.0'")
+    assert response.status_code == HTTPStatus.OK
+    content_s = response.content.decode()
+    # Since no packages exist, the content should be empty (no entries)
+    assert '<entry>' not in content_s
+
+
 @pytest.mark.django_db
 def test_put_too_many_nuspecs_post(client: Client, nuget_user: NugetUser) -> None:
     with NamedTemporaryFile('rb', prefix='minchoc_test', suffix='.zip') as tf:
@@ -144,12 +231,12 @@ def test_put_too_many_nuspecs_post(client: Client, nuget_user: NugetUser) -> Non
         z.writestr('a.nuspec', '')
         z.writestr('b.nuspec', 'aaa')
     content = Path(temp_name).read_bytes()
-    content = b"""--1234abc\r
+    content = (b"""--1234abc\r
 content-disposition: form-data; name="upload"; filename="a.zip"\r
 content-type: application/zip\r
 \r
 """ + content + b"""\r
---1234abc--"""
+--1234abc--""")
     response = client.post('/package/',
                            content,
                            'multipart/form-data; boundary=1234abc',
@@ -185,12 +272,12 @@ def test_put(client: Client, nuget_user: NugetUser) -> None:
   </metadata>
 </package>""")
     content = Path(temp_name).read_bytes()
-    content = b"""--1234abc\r
+    content = (b"""--1234abc\r
 content-disposition: form-data; name="upload"; filename="a.zip"\r
 content-type: application/zip\r
 \r
 """ + content + b"""\r
---1234abc--"""
+--1234abc--""")
     response = client.put('/package/',
                           content,
                           'multipart/form-data; boundary=1234abc',
@@ -216,7 +303,8 @@ content-type: application/zip\r
     response = client.get(
         '/Packages()',
         QUERY_STRING="$filter=(tolower(Id) eq 'somename') and IsLatestVersion&$orderby=id"
-        '&semVerLevel=2.0.0&$skip=0&$top=1')
+        '&semVerLevel=2.0.0&$skip=0&$top=1',
+    )
     assert re.search(GALLERY_RE, response.content) is not None
     assert response.status_code == HTTPStatus.OK
     # search as performed with ``choco search somename``
@@ -225,7 +313,7 @@ content-type: application/zip\r
         QUERY_STRING=("$filter=((((Id ne null) and substringof('somename',tolower(Id))) or "
                       "((Description ne null) and substringof('somename',tolower(Description))))"
                       " or ((Tags ne null) and substringof(' somename ',tolower(Tags)))) "
-                      "and IsLatestVersion"))
+                      'and IsLatestVersion'))
     assert re.search(GALLERY_RE, response.content) is not None
     assert response.status_code == HTTPStatus.OK
     # packages_with_args

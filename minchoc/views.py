@@ -53,7 +53,7 @@ NUSPEC_FIELD_MAPPINGS = {
     NUSPEC_FIELD_SUMMARY: 'summary',
     NUSPEC_FIELD_TAGS: 'tags',
     NUSPEC_FIELD_TITLE: 'title',
-    NUSPEC_FIELD_VERSION: 'version'
+    NUSPEC_FIELD_VERSION: 'version',
 }
 PACKAGE_FIELDS = {f.name: f for f in Package._meta.get_fields()}
 
@@ -88,15 +88,44 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
     Take a ``GET`` request to find packages.
 
     Sample URL: ``/FindPackagesById()?id=package-name``
+
+    Supports ``$skiptoken`` parameter for pagination in the format:
+    ``$skiptoken='PackageName','Version'``.
     """
-    if (sem_ver_level := request.GET.get('semVerLevel')):
+    if sem_ver_level := request.GET.get('semVerLevel'):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
     proto = 'https' if request.is_secure() else 'http'
     proto_host = f'{proto}://{request.get_host()}'
     try:
-        content = '\n'.join(
-            make_entry(proto_host, x)
-            for x in Package._default_manager.filter(nuget_id=request.GET['id'].replace("'", '')))
+        nuget_id = request.GET['id'].replace("'", '')
+        queryset = Package._default_manager.filter(nuget_id=nuget_id)
+        if skiptoken := request.GET.get('$skiptoken'):
+            # Parse skiptoken format: `'PackageName','Version'``.
+            # Remove quotes and split by comma.
+            parts = [part.strip().strip('\'"') for part in skiptoken.split(',')]
+            expected_parts = 2
+            if len(parts) == expected_parts:
+                skip_id, skip_version = parts
+                # Filter to get packages after the specified version.
+                # We order by version and filter out versions up to and including skip_version.
+                queryset = queryset.order_by('version')
+                # Get all packages and filter those after the skip_version.
+                all_packages: list[Package] = list(queryset)
+                skip_index = -1
+                for i, pkg in enumerate(all_packages):
+                    if pkg.nuget_id == skip_id and pkg.version == skip_version:
+                        skip_index = i
+                        break
+                content = '\n'.join(
+                    make_entry(proto_host, x)
+                    for x in (all_packages[skip_index + 1:] if skip_index >= 0 else all_packages))
+                return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
+                    'BASEURL': proto_host,
+                    'UPDATED': datetime.now(timezone.utc).isoformat()
+                },
+                                    content_type='application/xml')
+            logger.warning('Invalid $skiptoken format: %s', skiptoken)  # pragma: no cover
+        content = '\n'.join(make_entry(proto_host, x) for x in queryset)
         return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
             'BASEURL': proto_host,
             'UPDATED': datetime.now(timezone.utc).isoformat()
@@ -120,11 +149,11 @@ def packages(request: HttpRequest) -> HttpResponse:
     req_order_by = request.GET.get('$orderby')
     order_by = (FIELD_MAPPING[req_order_by]
                 if req_order_by and req_order_by in FIELD_MAPPING else 'nuget_id')
-    if (sem_ver_level := request.GET.get('semVerLevel')):
+    if sem_ver_level := request.GET.get('semVerLevel'):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
-    if (skip := request.GET.get('$skip')):
+    if skip := request.GET.get('$skip'):
         logger.warning('Ignoring $skip=%s', skip)
-    if (top := request.GET.get('$top')):
+    if top := request.GET.get('$top'):
         logger.warning('Ignoring $top=%s', top)
     try:
         filters = filter_parser.parse(filter_) if filter_ else {}
@@ -149,7 +178,7 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
 
     Sample URL: ``/Packages(Id='name',Version='123.0.0')``
     """
-    if (package := Package._default_manager.filter(nuget_id=name, version=version).first()):
+    if package := Package._default_manager.filter(nuget_id=name, version=version).first():
         proto = 'https' if request.is_secure() else 'http'
         proto_host = f'{proto}://{request.get_host()}'
         content = make_entry(proto_host, package)
@@ -172,7 +201,7 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
     This also handles deletions. Deletions will only be allowed with authentication and with
     ``settings.ALLOW_PACKAGE_DELETION`` set to ``True``.
     """
-    if (package := Package._default_manager.filter(nuget_id=name, version=version).first()):
+    if package := Package._default_manager.filter(nuget_id=name, version=version).first():
         if request.method == 'GET':
             with package.file.open('rb') as f:
                 package.download_count += 1
@@ -221,9 +250,8 @@ class APIV2PackageView(View):
             if len(nuspecs) > 1 or not nuspecs:
                 return JsonResponse(
                     {
-                        'error':
-                            'There should be exactly 1 nuspec file present. 0 or more than 1 were '
-                            'found.'
+                        'error': 'There should be exactly 1 nuspec file present. 0 or more than 1 '
+                                 'were found.'
                     },
                     status=400)
             with TemporaryDirectory(suffix='.nuget-parse') as temp_dir:

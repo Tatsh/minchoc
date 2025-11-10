@@ -78,6 +78,7 @@ schemafile
 sdist
 sessionfinish
 shellformat
+skiptoken
 somename
 sphinxcontrib
 substringof
