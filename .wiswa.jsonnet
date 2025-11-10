@@ -47,7 +47,9 @@ local utils = import 'utils.libjsonnet';
         },
         group+: {
           dev+: {
-            dependencies+: { 'django-stubs': '^5.2.0' },
+            dependencies+: {
+              'django-stubs': utils.latestPypiPackageVersionCaret('django-stubs'),
+            },
           },
           tests+: {
             dependencies+: {
@@ -69,4 +71,5 @@ local utils = import 'utils.libjsonnet';
   copilot+: {
     intro: 'minchoc is a MINimal CHOColatey-compatible server app for Django.',
   },
+  shared_ignore+: ['test_django*/'],
 }

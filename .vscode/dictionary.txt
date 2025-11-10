@@ -69,6 +69,7 @@ pychoco
 pydantic
 pydocstyle
 pylint
+pypa
 pypi
 pyproject
 pytest
@@ -79,6 +80,7 @@ sdist
 sessionfinish
 shellformat
 skiptoken
+softprops
 somename
 sphinxcontrib
 substringof
