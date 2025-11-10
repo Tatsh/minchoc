@@ -26,10 +26,8 @@ def test_packages_invalid_syntax(client: Client) -> None:
 
 @pytest.mark.django_db
 def test_packages_with_args_not_found(client: Client) -> None:
-    response = client.get(
-        "/Packages(Id='fake',Version='123.0.0')",
-        QUERY_STRING='$filter=(tolower(Id) eq somename) and IsLatestVersion',
-    )
+    response = client.get("/Packages(Id='fake',Version='123.0.0')",
+                          QUERY_STRING='$filter=(tolower(Id) eq somename) and IsLatestVersion')
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
@@ -214,6 +212,17 @@ content-type: application/zip\r
         assert f'<d:Version>{version}</d:Version>' not in content_s
 
 
+@pytest.mark.django_db(transaction=True)
+def test_find_packages_by_id_with_skiptoken_no_packages_found(client: Client) -> None:
+    """Test $skiptoken parameter in find_packages_by_id view when no packages are found."""
+    response = client.get(
+        "/FindPackagesById()?id=NonExistentPackage&$skiptoken='NonExistentPackage','1.0.0'")
+    assert response.status_code == HTTPStatus.OK
+    content_s = response.content.decode()
+    # Since no packages exist, the content should be empty (no entries)
+    assert '<entry>' not in content_s
+
+
 @pytest.mark.django_db
 def test_put_too_many_nuspecs_post(client: Client, nuget_user: NugetUser) -> None:
     with NamedTemporaryFile('rb', prefix='minchoc_test', suffix='.zip') as tf:
@@ -246,8 +255,7 @@ def test_put(client: Client, nuget_user: NugetUser) -> None:
         temp_name = tf.name
     with zipfile.ZipFile(temp_name, 'w') as z:
         z.writestr(
-            'a.nuspec',
-            """<?xml version="1.0" encoding="utf-8"?>
+            'a.nuspec', """<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>somename</id>
@@ -262,8 +270,7 @@ def test_put(client: Client, nuget_user: NugetUser) -> None:
     <tags>tag1 tag2</tags>
     <packageSourceUrl>https://a-url-can-be-same-as-project</packageSourceUrl>
   </metadata>
-</package>""",
-        )
+</package>""")
     content = Path(temp_name).read_bytes()
     content = (b"""--1234abc\r
 content-disposition: form-data; name="upload"; filename="a.zip"\r
@@ -306,8 +313,7 @@ content-type: application/zip\r
         QUERY_STRING=("$filter=((((Id ne null) and substringof('somename',tolower(Id))) or "
                       "((Description ne null) and substringof('somename',tolower(Description))))"
                       " or ((Tags ne null) and substringof(' somename ',tolower(Tags)))) "
-                      'and IsLatestVersion'),
-    )
+                      'and IsLatestVersion'))
     assert re.search(GALLERY_RE, response.content) is not None
     assert response.status_code == HTTPStatus.OK
     # packages_with_args

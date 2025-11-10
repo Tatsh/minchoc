@@ -1,5 +1,4 @@
 """Views."""
-
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -70,8 +69,7 @@ def home(_request: HttpRequest) -> HttpResponse:
 @require_http_methods(['GET'])
 def metadata(_request: HttpRequest) -> HttpResponse:
     """Get content for static page at ``/$metadata`` and at ``/api/v2/$metadata``."""
-    return HttpResponse(
-        """<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+    return HttpResponse("""<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <service xml:base="http://fixme/api/v2/"
                         xmlns:atom="http://www.w3.org/2005/Atom"
                         xmlns:app="http://www.w3.org/2007/app"
@@ -81,8 +79,7 @@ def metadata(_request: HttpRequest) -> HttpResponse:
         <collection href="Packages"><atom:title>Packages</atom:title></collection>
     </workspace>
 </service>\n""",
-        content_type='application/xml',
-    )
+                        content_type='application/xml')
 
 
 @require_http_methods(['GET'])
@@ -93,7 +90,7 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
     Sample URL: ``/FindPackagesById()?id=package-name``
 
     Supports ``$skiptoken`` parameter for pagination in the format:
-    ``$skiptoken='PackageName','Version'``
+    ``$skiptoken='PackageName','Version'``.
     """
     if sem_ver_level := request.GET.get('semVerLevel'):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
@@ -102,35 +99,32 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
     try:
         nuget_id = request.GET['id'].replace("'", '')
         queryset = Package._default_manager.filter(nuget_id=nuget_id)
-
-        # Handle $skiptoken parameter
         if skiptoken := request.GET.get('$skiptoken'):
-            # Parse skiptoken format: 'PackageName','Version'
-            # Remove quotes and split by comma
+            # Parse skiptoken format: `'PackageName','Version'``.
+            # Remove quotes and split by comma.
             parts = [part.strip().strip('\'"') for part in skiptoken.split(',')]
             expected_parts = 2
             if len(parts) == expected_parts:
                 skip_id, skip_version = parts
-                # Filter to get packages after the specified version
-                # We order by version and filter out versions up to and including skip_version
+                # Filter to get packages after the specified version.
+                # We order by version and filter out versions up to and including skip_version.
                 queryset = queryset.order_by('version')
-                # Get all packages and filter those after the skip_version
+                # Get all packages and filter those after the skip_version.
                 all_packages: list[Package] = list(queryset)
                 skip_index = -1
                 for i, pkg in enumerate(all_packages):
                     if pkg.nuget_id == skip_id and pkg.version == skip_version:
                         skip_index = i
                         break
-                # Use the list directly for iteration, mypy is happy with this
-                packages_list = all_packages[skip_index + 1:] if skip_index >= 0 else all_packages
-                content = '\n'.join(make_entry(proto_host, x) for x in packages_list)
+                content = '\n'.join(
+                    make_entry(proto_host, x)
+                    for x in (all_packages[skip_index + 1:] if skip_index >= 0 else all_packages))
                 return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
                     'BASEURL': proto_host,
                     'UPDATED': datetime.now(timezone.utc).isoformat()
                 },
                                     content_type='application/xml')
-            logger.warning('Invalid $skiptoken format: %s', skiptoken)
-
+            logger.warning('Invalid $skiptoken format: %s', skiptoken)  # pragma: no cover
         content = '\n'.join(make_entry(proto_host, x) for x in queryset)
         return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
             'BASEURL': proto_host,
@@ -170,13 +164,11 @@ def packages(request: HttpRequest) -> HttpResponse:
     content = '\n'.join(
         make_entry(proto_host, x)
         for x in Package._default_manager.order_by(order_by).filter(filters)[0:20])
-    return HttpResponse(
-        f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
-            'BASEURL': proto_host,
-            'UPDATED': datetime.now(timezone.utc).isoformat()
-        },
-        content_type='application/xml',
-    )
+    return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
+        'BASEURL': proto_host,
+        'UPDATED': datetime.now(timezone.utc).isoformat()
+    },
+                        content_type='application/xml')
 
 
 @require_http_methods(['GET'])
@@ -190,13 +182,11 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
         proto = 'https' if request.is_secure() else 'http'
         proto_host = f'{proto}://{request.get_host()}'
         content = make_entry(proto_host, package)
-        return HttpResponse(
-            f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
-                'BASEURL': proto_host,
-                'UPDATED': datetime.now(timezone.utc).isoformat()
-            },
-            content_type='application/xml',
-        )
+        return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
+            'BASEURL': proto_host,
+            'UPDATED': datetime.now(timezone.utc).isoformat()
+        },
+                            content_type='application/xml')
     return HttpResponseNotFound()
 
 
@@ -263,8 +253,7 @@ class APIV2PackageView(View):
                         'error': 'There should be exactly 1 nuspec file present. 0 or more than 1 '
                                  'were found.'
                     },
-                    status=400,
-                )
+                    status=400)
             with TemporaryDirectory(suffix='.nuget-parse') as temp_dir:
                 z.extract(nuspecs[0], temp_dir)
                 root = parse_xml(Path(temp_dir) / nuspecs[0].filename).getroot()
