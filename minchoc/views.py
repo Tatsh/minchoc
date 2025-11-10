@@ -1,4 +1,5 @@
 """Views."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -53,7 +54,7 @@ NUSPEC_FIELD_MAPPINGS = {
     NUSPEC_FIELD_SUMMARY: 'summary',
     NUSPEC_FIELD_TAGS: 'tags',
     NUSPEC_FIELD_TITLE: 'title',
-    NUSPEC_FIELD_VERSION: 'version'
+    NUSPEC_FIELD_VERSION: 'version',
 }
 PACKAGE_FIELDS = {f.name: f for f in Package._meta.get_fields()}
 
@@ -69,7 +70,8 @@ def home(_request: HttpRequest) -> HttpResponse:
 @require_http_methods(['GET'])
 def metadata(_request: HttpRequest) -> HttpResponse:
     """Get content for static page at ``/$metadata`` and at ``/api/v2/$metadata``."""
-    return HttpResponse("""<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+    return HttpResponse(
+        """<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <service xml:base="http://fixme/api/v2/"
                         xmlns:atom="http://www.w3.org/2005/Atom"
                         xmlns:app="http://www.w3.org/2007/app"
@@ -79,7 +81,8 @@ def metadata(_request: HttpRequest) -> HttpResponse:
         <collection href="Packages"><atom:title>Packages</atom:title></collection>
     </workspace>
 </service>\n""",
-                        content_type='application/xml')
+        content_type='application/xml',
+    )
 
 
 @require_http_methods(['GET'])
@@ -88,20 +91,46 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
     Take a ``GET`` request to find packages.
 
     Sample URL: ``/FindPackagesById()?id=package-name``
+
+    Supports ``$skiptoken`` parameter for pagination in the format:
+    ``$skiptoken='PackageName','Version'``
     """
-    if (sem_ver_level := request.GET.get('semVerLevel')):
+    if sem_ver_level := request.GET.get('semVerLevel'):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
     proto = 'https' if request.is_secure() else 'http'
     proto_host = f'{proto}://{request.get_host()}'
     try:
-        content = '\n'.join(
-            make_entry(proto_host, x)
-            for x in Package._default_manager.filter(nuget_id=request.GET['id'].replace("'", '')))
-        return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
-            'BASEURL': proto_host,
-            'UPDATED': datetime.now(timezone.utc).isoformat()
-        },
-                            content_type='application/xml')
+        nuget_id = request.GET['id'].replace("'", '')
+        queryset = Package._default_manager.filter(nuget_id=nuget_id)
+
+        # Handle $skiptoken parameter
+        if skiptoken := request.GET.get('$skiptoken'):
+            # Parse skiptoken format: 'PackageName','Version'
+            # Remove quotes and split by comma
+            parts = [part.strip().strip('\'"') for part in skiptoken.split(',')]
+            expected_parts = 2
+            if len(parts) == expected_parts:
+                skip_id, skip_version = parts
+                # Filter to get packages after the specified version
+                # We order by version and filter out versions up to and including skip_version
+                queryset = queryset.order_by('version')
+                # Get all packages and filter those after the skip_version
+                all_packages = list(queryset)
+                skip_index = -1
+                for i, pkg in enumerate(all_packages):
+                    if pkg.nuget_id == skip_id and pkg.version == skip_version:
+                        skip_index = i
+                        break
+                queryset = all_packages[skip_index + 1 :] if skip_index >= 0 else all_packages
+            else:
+                logger.warning('Invalid $skiptoken format: %s', skiptoken)
+
+        content = '\n'.join(make_entry(proto_host, x) for x in queryset)
+        return HttpResponse(
+            f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
+            % {'BASEURL': proto_host, 'UPDATED': datetime.now(timezone.utc).isoformat()},
+            content_type='application/xml',
+        )
     except KeyError:
         return HttpResponse(status=400)
 
@@ -118,13 +147,16 @@ def packages(request: HttpRequest) -> HttpResponse:
     """  # noqa: E501
     filter_ = request.GET.get('$filter')
     req_order_by = request.GET.get('$orderby')
-    order_by = (FIELD_MAPPING[req_order_by]
-                if req_order_by and req_order_by in FIELD_MAPPING else 'nuget_id')
-    if (sem_ver_level := request.GET.get('semVerLevel')):
+    order_by = (
+        FIELD_MAPPING[req_order_by]
+        if req_order_by and req_order_by in FIELD_MAPPING
+        else 'nuget_id'
+    )
+    if sem_ver_level := request.GET.get('semVerLevel'):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
-    if (skip := request.GET.get('$skip')):
+    if skip := request.GET.get('$skip'):
         logger.warning('Ignoring $skip=%s', skip)
-    if (top := request.GET.get('$top')):
+    if top := request.GET.get('$top'):
         logger.warning('Ignoring $top=%s', top)
     try:
         filters = filter_parser.parse(filter_) if filter_ else {}
@@ -134,12 +166,13 @@ def packages(request: HttpRequest) -> HttpResponse:
     proto_host = f'{proto}://{request.get_host()}'
     content = '\n'.join(
         make_entry(proto_host, x)
-        for x in Package._default_manager.order_by(order_by).filter(filters)[0:20])
-    return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
-        'BASEURL': proto_host,
-        'UPDATED': datetime.now(timezone.utc).isoformat()
-    },
-                        content_type='application/xml')
+        for x in Package._default_manager.order_by(order_by).filter(filters)[0:20]
+    )
+    return HttpResponse(
+        f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n'
+        % {'BASEURL': proto_host, 'UPDATED': datetime.now(timezone.utc).isoformat()},
+        content_type='application/xml',
+    )
 
 
 @require_http_methods(['GET'])
@@ -149,15 +182,15 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
 
     Sample URL: ``/Packages(Id='name',Version='123.0.0')``
     """
-    if (package := Package._default_manager.filter(nuget_id=name, version=version).first()):
+    if package := Package._default_manager.filter(nuget_id=name, version=version).first():
         proto = 'https' if request.is_secure() else 'http'
         proto_host = f'{proto}://{request.get_host()}'
         content = make_entry(proto_host, package)
-        return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
-            'BASEURL': proto_host,
-            'UPDATED': datetime.now(timezone.utc).isoformat()
-        },
-                            content_type='application/xml')
+        return HttpResponse(
+            f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n'
+            % {'BASEURL': proto_host, 'UPDATED': datetime.now(timezone.utc).isoformat()},
+            content_type='application/xml',
+        )
     return HttpResponseNotFound()
 
 
@@ -172,7 +205,7 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
     This also handles deletions. Deletions will only be allowed with authentication and with
     ``settings.ALLOW_PACKAGE_DELETION`` set to ``True``.
     """
-    if (package := Package._default_manager.filter(nuget_id=name, version=version).first()):
+    if package := Package._default_manager.filter(nuget_id=name, version=version).first():
         if request.method == 'GET':
             with package.file.open('rb') as f:
                 package.download_count += 1
@@ -191,6 +224,7 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
 @method_decorator(csrf_exempt, name='dispatch')
 class APIV2PackageView(View):
     """API V2 package upload view."""
+
     @override
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         """Check if a user is authorised before allowing the request to continue."""
@@ -202,7 +236,8 @@ class APIV2PackageView(View):
         """Upload a package. This must be a multipart upload with a single valid NuGet file."""
         if not request.content_type or not request.content_type.startswith('multipart/'):
             return JsonResponse(
-                {'error': f'Invalid content type: {request.content_type or "unknown"}'}, status=400)
+                {'error': f'Invalid content type: {request.content_type or "unknown"}'}, status=400
+            )
         try:
             _, files = request.parse_file_upload(request.META, BytesIO(request.body))
         except MultiPartParserError:
@@ -221,11 +256,11 @@ class APIV2PackageView(View):
             if len(nuspecs) > 1 or not nuspecs:
                 return JsonResponse(
                     {
-                        'error':
-                            'There should be exactly 1 nuspec file present. 0 or more than 1 were '
-                            'found.'
+                        'error': 'There should be exactly 1 nuspec file present. 0 or more than 1 were '
+                        'found.'
                     },
-                    status=400)
+                    status=400,
+                )
             with TemporaryDirectory(suffix='.nuget-parse') as temp_dir:
                 z.extract(nuspecs[0], temp_dir)
                 root = parse_xml(Path(temp_dir) / nuspecs[0].filename).getroot()
@@ -239,9 +274,13 @@ class APIV2PackageView(View):
             if not value:  # pragma no cover
                 logger.warning('No value for key %s', key)
                 continue
-            column_type = (None if column_name not in PACKAGE_FIELDS else cast(
-                'Field[Any, Any] | ForeignObjectRel',
-                PACKAGE_FIELDS[column_name]).get_internal_type())
+            column_type = (
+                None
+                if column_name not in PACKAGE_FIELDS
+                else cast(
+                    'Field[Any, Any] | ForeignObjectRel', PACKAGE_FIELDS[column_name]
+                ).get_internal_type()
+            )
             if not column_type or column_type == 'ManyToManyField':
                 if column_name == 'tags':
                     assert value is not None
@@ -273,14 +312,16 @@ class APIV2PackageView(View):
         new_package.size = cast('int', nuget_file.size)
         new_package.file = File(nuget_file, nuget_file.name)
         uploader = NugetUser._default_manager.filter(
-            token=request.headers['x-nuget-apikey']).first()
+            token=request.headers['x-nuget-apikey']
+        ).first()
         assert uploader is not None
         new_package.uploader = uploader
         try:
             new_package.save()
         except IntegrityError:
-            return JsonResponse({'error': 'Integrity error (has this already been uploaded?)'},
-                                status=400)
+            return JsonResponse(
+                {'error': 'Integrity error (has this already been uploaded?)'}, status=400
+            )
         new_package.tags.add(*add_tags)
         new_package.authors.add(*add_authors)
         return HttpResponse(status=201)

@@ -21,3 +21,5 @@ cobertura.xml
 htmlcov/
 mypy-report.xml
 node_modules/
+parsetab.py
+test_django*/
