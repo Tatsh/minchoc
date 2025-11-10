@@ -122,21 +122,21 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
                         skip_index = i
                         break
                 # Use the list directly for iteration, mypy is happy with this
-                packages_list = all_packages[skip_index + 1 :] if skip_index >= 0 else all_packages
+                packages_list = all_packages[skip_index + 1:] if skip_index >= 0 else all_packages
                 content = '\n'.join(make_entry(proto_host, x) for x in packages_list)
-                return HttpResponse(
-                    f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
-                    % {'BASEURL': proto_host, 'UPDATED': datetime.now(timezone.utc).isoformat()},
-                    content_type='application/xml',
-                )
+                return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
+                    'BASEURL': proto_host,
+                    'UPDATED': datetime.now(timezone.utc).isoformat()
+                },
+                                    content_type='application/xml')
             logger.warning('Invalid $skiptoken format: %s', skiptoken)
 
         content = '\n'.join(make_entry(proto_host, x) for x in queryset)
-        return HttpResponse(
-            f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
-            % {'BASEURL': proto_host, 'UPDATED': datetime.now(timezone.utc).isoformat()},
-            content_type='application/xml',
-        )
+        return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
+            'BASEURL': proto_host,
+            'UPDATED': datetime.now(timezone.utc).isoformat()
+        },
+                            content_type='application/xml')
     except KeyError:
         return HttpResponse(status=400)
 
@@ -153,11 +153,8 @@ def packages(request: HttpRequest) -> HttpResponse:
     """  # noqa: E501
     filter_ = request.GET.get('$filter')
     req_order_by = request.GET.get('$orderby')
-    order_by = (
-        FIELD_MAPPING[req_order_by]
-        if req_order_by and req_order_by in FIELD_MAPPING
-        else 'nuget_id'
-    )
+    order_by = (FIELD_MAPPING[req_order_by]
+                if req_order_by and req_order_by in FIELD_MAPPING else 'nuget_id')
     if sem_ver_level := request.GET.get('semVerLevel'):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
     if skip := request.GET.get('$skip'):
@@ -172,11 +169,12 @@ def packages(request: HttpRequest) -> HttpResponse:
     proto_host = f'{proto}://{request.get_host()}'
     content = '\n'.join(
         make_entry(proto_host, x)
-        for x in Package._default_manager.order_by(order_by).filter(filters)[0:20]
-    )
+        for x in Package._default_manager.order_by(order_by).filter(filters)[0:20])
     return HttpResponse(
-        f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n'
-        % {'BASEURL': proto_host, 'UPDATED': datetime.now(timezone.utc).isoformat()},
+        f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
+            'BASEURL': proto_host,
+            'UPDATED': datetime.now(timezone.utc).isoformat()
+        },
         content_type='application/xml',
     )
 
@@ -193,8 +191,10 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
         proto_host = f'{proto}://{request.get_host()}'
         content = make_entry(proto_host, package)
         return HttpResponse(
-            f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n'
-            % {'BASEURL': proto_host, 'UPDATED': datetime.now(timezone.utc).isoformat()},
+            f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
+                'BASEURL': proto_host,
+                'UPDATED': datetime.now(timezone.utc).isoformat()
+            },
             content_type='application/xml',
         )
     return HttpResponseNotFound()
@@ -230,7 +230,6 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
 @method_decorator(csrf_exempt, name='dispatch')
 class APIV2PackageView(View):
     """API V2 package upload view."""
-
     @override
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         """Check if a user is authorised before allowing the request to continue."""
@@ -242,8 +241,7 @@ class APIV2PackageView(View):
         """Upload a package. This must be a multipart upload with a single valid NuGet file."""
         if not request.content_type or not request.content_type.startswith('multipart/'):
             return JsonResponse(
-                {'error': f'Invalid content type: {request.content_type or "unknown"}'}, status=400
-            )
+                {'error': f'Invalid content type: {request.content_type or "unknown"}'}, status=400)
         try:
             _, files = request.parse_file_upload(request.META, BytesIO(request.body))
         except MultiPartParserError:
@@ -262,9 +260,8 @@ class APIV2PackageView(View):
             if len(nuspecs) > 1 or not nuspecs:
                 return JsonResponse(
                     {
-                        'error':
-                            'There should be exactly 1 nuspec file present. 0 or more than 1 '
-                            'were found.'
+                        'error': 'There should be exactly 1 nuspec file present. 0 or more than 1 '
+                                 'were found.'
                     },
                     status=400,
                 )
@@ -281,13 +278,9 @@ class APIV2PackageView(View):
             if not value:  # pragma no cover
                 logger.warning('No value for key %s', key)
                 continue
-            column_type = (
-                None
-                if column_name not in PACKAGE_FIELDS
-                else cast(
-                    'Field[Any, Any] | ForeignObjectRel', PACKAGE_FIELDS[column_name]
-                ).get_internal_type()
-            )
+            column_type = (None if column_name not in PACKAGE_FIELDS else cast(
+                'Field[Any, Any] | ForeignObjectRel',
+                PACKAGE_FIELDS[column_name]).get_internal_type())
             if not column_type or column_type == 'ManyToManyField':
                 if column_name == 'tags':
                     assert value is not None
@@ -319,16 +312,14 @@ class APIV2PackageView(View):
         new_package.size = cast('int', nuget_file.size)
         new_package.file = File(nuget_file, nuget_file.name)
         uploader = NugetUser._default_manager.filter(
-            token=request.headers['x-nuget-apikey']
-        ).first()
+            token=request.headers['x-nuget-apikey']).first()
         assert uploader is not None
         new_package.uploader = uploader
         try:
             new_package.save()
         except IntegrityError:
-            return JsonResponse(
-                {'error': 'Integrity error (has this already been uploaded?)'}, status=400
-            )
+            return JsonResponse({'error': 'Integrity error (has this already been uploaded?)'},
+                                status=400)
         new_package.tags.add(*add_tags)
         new_package.authors.add(*add_authors)
         return HttpResponse(status=201)

@@ -152,8 +152,7 @@ def test_find_packages_by_id_with_skiptoken(client: Client, nuget_user: NugetUse
             temp_name = tf.name
         with zipfile.ZipFile(temp_name, 'w') as z:
             z.writestr(
-                'test.nuspec',
-                f"""<?xml version="1.0" encoding="utf-8"?>
+                'test.nuspec', f"""<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>TestPackage</id>
@@ -168,8 +167,7 @@ def test_find_packages_by_id_with_skiptoken(client: Client, nuget_user: NugetUse
     <tags>test</tags>
     <packageSourceUrl>https://test.example.com</packageSourceUrl>
   </metadata>
-</package>""",
-            )
+</package>""")
         content = Path(temp_name).read_bytes()
         content = (b"""--1234abc\r
 content-disposition: form-data; name="upload"; filename="test.zip"\r
