@@ -33,34 +33,34 @@ def test_packages_with_args_not_found(client: Client) -> None:
 
 @pytest.mark.django_db
 def test_fetch_package_file(client: Client) -> None:
-    response = client.get('/api/v2/package/fake/123.0.0')
+    response = client.get('/package/fake/123.0.0')
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.django_db
 def test_put_not_authorized(client: Client) -> None:
-    response = client.put('/api/v2/package/')
+    response = client.put('/package/')
     assert response.json()['error'] == 'Not authorized'
     assert response.status_code == HTTPStatus.FORBIDDEN
 
 
 @pytest.mark.django_db
 def test_post_not_authorized(client: Client) -> None:
-    response = client.put('/api/v2/package/')
+    response = client.put('/package/')
     assert response.json()['error'] == 'Not authorized'
     assert response.status_code == HTTPStatus.FORBIDDEN
 
 
 @pytest.mark.django_db
 def test_put_invalid_content_type_unknown(client: Client, nuget_user: NugetUser) -> None:
-    response = client.put('/api/v2/package/', headers={'x-nuget-apikey': nuget_user.token.hex})
+    response = client.put('/package/', headers={'x-nuget-apikey': nuget_user.token.hex})
     assert response.json()['error'] == 'Invalid content type: unknown'
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.django_db
 def test_put_invalid_content_type_set(client: Client, nuget_user: NugetUser) -> None:
-    response = client.put('/api/v2/package/',
+    response = client.put('/package/',
                           'nothing',
                           'application/xml',
                           headers={'x-nuget-apikey': nuget_user.token.hex})
@@ -70,7 +70,7 @@ def test_put_invalid_content_type_set(client: Client, nuget_user: NugetUser) -> 
 
 @pytest.mark.django_db
 def test_put_no_boundary(client: Client, nuget_user: NugetUser) -> None:
-    response = client.put('/api/v2/package/',
+    response = client.put('/package/',
                           'nothing',
                           'multipart/form-data',
                           headers={'x-nuget-apikey': nuget_user.token.hex})
@@ -80,7 +80,7 @@ def test_put_no_boundary(client: Client, nuget_user: NugetUser) -> None:
 
 @pytest.mark.django_db
 def test_put_no_files(client: Client, nuget_user: NugetUser) -> None:
-    response = client.put('/api/v2/package/',
+    response = client.put('/package/',
                           'nothing',
                           'multipart/form-data; boundary=1234abc',
                           headers={'x-nuget-apikey': nuget_user.token.hex})
@@ -101,7 +101,7 @@ content-type: text/plain
 
 Some data2
 --1234abc--""".replace('\n', '\r\n')
-    response = client.put('/api/v2/package/',
+    response = client.put('/package/',
                           content,
                           'multipart/form-data; boundary=1234abc',
                           headers={
@@ -120,7 +120,7 @@ content-type: text/plain
 
 Some data
 --1234abc--""".replace('\n', '\r\n')
-    response = client.put('/api/v2/package/',
+    response = client.put('/package/',
                           content,
                           'multipart/form-data; boundary=1234abc',
                           headers={
@@ -150,7 +150,7 @@ content-type: application/zip\r
 \r
 """ + content + b"""\r
 --1234abc--"""
-    response = client.post('/api/v2/package/',
+    response = client.post('/package/',
                            content,
                            'multipart/form-data; boundary=1234abc',
                            headers={
@@ -191,7 +191,7 @@ content-type: application/zip\r
 \r
 """ + content + b"""\r
 --1234abc--"""
-    response = client.put('/api/v2/package/',
+    response = client.put('/package/',
                           content,
                           'multipart/form-data; boundary=1234abc',
                           headers={
@@ -199,7 +199,7 @@ content-type: application/zip\r
                               'x-nuget-apikey': nuget_user.token.hex
                           })
     assert response.status_code == HTTPStatus.CREATED
-    response = client.post('/api/v2/package/',
+    response = client.post('/package/',
                            content,
                            'multipart/form-data; boundary=1234abc',
                            headers={
@@ -236,18 +236,18 @@ content-type: application/zip\r
     package = Package._default_manager.filter(nuget_id='somename').first()
     assert package is not None
     assert package.download_count == 0
-    response = client.get('/api/v2/package/somename/1.0.2')
+    response = client.get('/package/somename/1.0.2')
     assert response.get('content-type') == 'application/zip'
     assert response.status_code == HTTPStatus.OK
     package = Package._default_manager.filter(nuget_id='somename').first()
     assert package is not None
     assert package.download_count == 1
-    response = client.delete('/api/v2/package/somename/1.0.2')
+    response = client.delete('/package/somename/1.0.2')
     assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
     settings.ALLOW_PACKAGE_DELETION = True
     # fetch_package_file DELETE
-    response = client.delete('/api/v2/package/somename/1.0.2')
+    response = client.delete('/package/somename/1.0.2')
     assert response.status_code == HTTPStatus.FORBIDDEN
-    response = client.delete('/api/v2/package/somename/1.0.2',
+    response = client.delete('/package/somename/1.0.2',
                              headers={'x-nuget-apikey': nuget_user.token.hex})
     assert response.status_code == HTTPStatus.NO_CONTENT

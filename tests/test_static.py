@@ -25,6 +25,6 @@ def test_metadata(client: Client) -> None:
 
 @pytest.mark.django_db
 def test_metadata_alt(client: Client) -> None:
-    response = client.get('/api/v2/$metadata')
+    response = client.get('/$metadata')
     assert response.get('content-type') == 'application/xml'
     assert response.status_code == HTTPStatus.OK

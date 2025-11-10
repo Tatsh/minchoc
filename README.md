@@ -42,13 +42,13 @@ ALLOW_PACKAGE_DELETION = True
 A `DELETE` call to `/api/v2/package/<id>/<version>` will be denied even with authentication unless
 `ALLOW_PACKAGE_DELETION` is set to `True`.
 
-Add `path('', include('minchoc.urls'))` to your root `urls.py`. Example:
+Add `path('/api/v2/', include('minchoc.urls'))` to your root `urls.py`. Example:
 
 ```python
 from django.urls import include, path
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('minchoc.urls')),
+    path('api/v2/', include('minchoc.urls')),
 ]
 ```
 
