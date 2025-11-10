@@ -5,7 +5,7 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/minchoc)](https://pypi.org/project/minchoc/)
 [![GitHub tag (with filter)](https://img.shields.io/github/v/tag/Tatsh/minchoc)](https://github.com/Tatsh/minchoc/tags)
 [![License](https://img.shields.io/github/license/Tatsh/minchoc)](https://github.com/Tatsh/minchoc/blob/master/LICENSE.txt)
-[![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/minchoc/v0.0.11/master)](https://github.com/Tatsh/minchoc/compare/v0.0.11...master)
+[![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/minchoc/v0.1.0/master)](https://github.com/Tatsh/minchoc/compare/v0.1.0...master)
 [![CodeQL](https://github.com/Tatsh/minchoc/actions/workflows/codeql.yml/badge.svg)](https://github.com/Tatsh/minchoc/actions/workflows/codeql.yml)
 [![QA](https://github.com/Tatsh/minchoc/actions/workflows/qa.yml/badge.svg)](https://github.com/Tatsh/minchoc/actions/workflows/qa.yml)
 [![Tests](https://github.com/Tatsh/minchoc/actions/workflows/tests.yml/badge.svg)](https://github.com/Tatsh/minchoc/actions/workflows/tests.yml)
