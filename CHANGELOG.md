@@ -12,6 +12,10 @@ and this project adheres to
 
 ## [0.1.0]
 
+### Added
+
+- Support for `$skiptoken` format `'PackageName','Version'`.
+
 ### Changed
 
 - All paths no longer have a prefix. This should be set by the user of this library in their root
