@@ -10,6 +10,8 @@ and this project adheres to
 
 ## [unreleased]
 
+## [0.1.0]
+
 ### Changed
 
 - All paths no longer have a prefix. This should be set by the user of this library in their root
@@ -19,21 +21,21 @@ and this project adheres to
 
 ### Added
 
-- Added badges to readme
-- Added `__version__` to `minchoc` module
+- Added badges to readme.
+- Added `__version__` to `minchoc` module.
 
 ### Changed
 
 - Switched to [django-stubs](https://github.com/typeddjango/django-stubs)
 - Updated all typing to work with Mypy + django-stubs
-  - Pyright (and Pylance in VS Code) errors are ignored
-- Upgraded dependencies
-- Now requires `django@^5.0.0`
-- Make use of [Cruft](https://cruft.github.io/cruft/)
-- Updated project cruft
-  - Fixed all issues reported by Ruff since cruft update
-- Synchronised [documentation](https://minchoc.readthedocs.io/en/latest/#minchoc) with the readme
-- Changed documentation theme
+  - Pyright (and Pylance in VS Code) errors are ignored.
+- Upgraded dependencies.
+- Now requires `django@^5.0.0`.
+- Make use of [Cruft](https://cruft.github.io/cruft/).
+- Updated project cruft.
+  - Fixed all issues reported by Ruff since cruft update.
+- Synchronised [documentation](https://minchoc.readthedocs.io/en/latest/#minchoc) with the readme.
+- Changed documentation theme.
 
 ### Removed
 
@@ -43,12 +45,14 @@ and this project adheres to
 
 ### Changed
 
-- Upgraded dependencies
-- Added tests, coverage at 95%+
+- Upgraded dependencies.
+- Added tests, coverage at 95%+.
 
 ### Removed
 
-- Removed `WANT_NUGET_HOME` setting
+- Removed `WANT_NUGET_HOME` setting.
 
-[0.0.11]: https://github.com/Tatsh/minchoc/compare/v0.0.10...v0.0.11
+[unreleased]: https://github.com/Tatsh/pychoco/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Tatsh/minchoc/compare/v0.0.11...v0.1.0
+[0.0.11]: https://github.com/Tatsh/minchoc/compare/v0.0.6...v0.0.11
 [0.0.6]: https://github.com/Tatsh/minchoc/compare/v0.0.5...v0.0.6
