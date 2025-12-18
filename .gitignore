@@ -18,6 +18,7 @@
 /packages/
 __pycache__/
 cobertura.xml
+coverage.xml
 htmlcov/
 mypy-report.xml
 node_modules/

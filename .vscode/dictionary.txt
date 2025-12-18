@@ -10,6 +10,7 @@ codeowners
 commitizen
 conftest
 coveragerc
+coverallsapp
 dataclasses
 datatable
 datatables
@@ -48,6 +49,7 @@ lexdata
 lexpos
 lexspan
 lextudio
+libera
 libjsonnet
 linespan
 linters
@@ -63,6 +65,7 @@ nuspecs
 olatey
 packageversiondownloadcount
 parsetab
+pavelzw
 pipx
 pycache
 pychoco

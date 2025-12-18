@@ -41,7 +41,7 @@ local utils = import 'utils.libjsonnet';
       poetry+: {
         dependencies+: {
           defusedxml: utils.latestPypiPackageVersionCaret('defusedxml'),
-          django: utils.latestPypiPackageVersionCaret('django'),
+          django: '>=5.2.9',
           'django-stubs-ext': utils.latestPypiPackageVersionCaret('django-stubs-ext'),
           ply: utils.latestPypiPackageVersionCaret('ply'),
         },
