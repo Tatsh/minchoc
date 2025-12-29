@@ -120,7 +120,7 @@ typing-extensions = "^4.15.0"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-commitizen = "^4.10.1"
+commitizen = "^4.11.0"
 cz-path = "^0.0.4"
 django-stubs = "^5.2.8"
 djlint = "^1.36.4"
