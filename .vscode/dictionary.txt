@@ -6,7 +6,6 @@ automodule
 bsky
 choc
 choco
-codeowners
 commitizen
 conftest
 coveragerc
@@ -34,7 +33,6 @@ foxundermoon
 genindex
 getslice
 globaltoc
-hoverxref
 htmlcov
 imal
 intersphinx
