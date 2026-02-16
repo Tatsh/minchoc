@@ -125,7 +125,7 @@ cz-path = "^0.0.4"
 django-stubs = "^5.2.9"
 djlint = "^1.36.4"
 mypy = "^1.19.1"
-ruff = "^0.15.0"
+ruff = "^0.15.1"
 yapf = "^0.43.0"
 
 [tool.poetry.group.docs]
