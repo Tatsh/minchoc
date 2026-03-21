@@ -8,13 +8,29 @@ from django.db.models import Sum
 from .models import Package
 
 if TYPE_CHECKING:
-    from xml.etree.ElementTree import Element  # noqa: S405
+    from xml.etree.ElementTree import Element
 
 __all__ = ('make_entry', 'tag_text_or')
 
 
 def make_entry(host: str, package: Package, ending: str = '\n') -> str:
-    """Create a package ``<entry>`` element for a package XML feed."""
+    """
+    Create a package ``<entry>`` element for a package XML feed.
+
+    Parameters
+    ----------
+    host : str
+        The protocol and hostname prefix for URLs, e.g. ``https://example.com``.
+    package : Package
+        The :py:class:`~minchoc.models.Package` instance to render.
+    ending : str
+        Trailing string appended after the closing ``</entry>`` tag.
+
+    Returns
+    -------
+    str
+        The rendered XML ``<entry>`` element.
+    """
     total_downloads = Package._default_manager.filter(nuget_id=package.nuget_id).aggregate(
         total_downloads=Sum('download_count'))['total_downloads']
     return f"""<entry>
@@ -65,5 +81,19 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
 
 
 def tag_text_or(tag: Element | None, default: str | None = None) -> str | None:
-    """Return text from a tag or the default value specified."""
+    """
+    Return text from a tag or the default value specified.
+
+    Parameters
+    ----------
+    tag : Element | None
+        An XML element to extract text from, or ``None``.
+    default : str | None
+        Value to return when *tag* is ``None`` or has no text content.
+
+    Returns
+    -------
+    str | None
+        The element's text content, or *default*.
+    """
     return tag.text if tag is not None and tag.text else default

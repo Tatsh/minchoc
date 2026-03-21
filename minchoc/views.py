@@ -30,7 +30,6 @@ from .utils import make_entry, tag_text_or
 if TYPE_CHECKING:  # pragma: no cover
     from _typeshed import SupportsKeysAndGetItem
     from django.core.files.uploadedfile import UploadedFile
-    from django.db.models import Field, ForeignObjectRel
 
 NUSPEC_NAMESPACES = {'': 'http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd'}
 NUSPEC_FIELD_AUTHORS = 'authors'
@@ -100,7 +99,7 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
         nuget_id = request.GET['id'].replace("'", '')
         queryset = Package._default_manager.filter(nuget_id=nuget_id)
         if skiptoken := request.GET.get('$skiptoken'):
-            # Parse skiptoken format: `'PackageName','Version'``.
+            # Parse skiptoken format: `'PackageName','Version'`.
             # Remove quotes and split by comma.
             parts = [part.strip().strip('\'"') for part in skiptoken.split(',')]
             expected_parts = 2
@@ -267,9 +266,8 @@ class APIV2PackageView(View):
             if not value:  # pragma no cover
                 logger.warning('No value for key %s', key)
                 continue
-            column_type = (None if column_name not in PACKAGE_FIELDS else cast(
-                'Field[Any, Any] | ForeignObjectRel',
-                PACKAGE_FIELDS[column_name]).get_internal_type())
+            column_type = (None if column_name not in PACKAGE_FIELDS else
+                           PACKAGE_FIELDS[column_name].get_internal_type())
             if not column_type or column_type == 'ManyToManyField':
                 if column_name == 'tags':
                     assert value is not None
