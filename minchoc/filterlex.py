@@ -45,12 +45,27 @@ def t_string_escapedquote(_t: lex.LexToken) -> None:
 
 
 def t_string_quote(t: lex.LexToken) -> lex.LexToken:
-    r"'"
+    """
+    Finish a string literal and emit a ``STRING`` token.
+
+    Parameters
+    ----------
+    t : lex.LexToken
+        The current lexer token at the closing quote.
+
+    Returns
+    -------
+    lex.LexToken
+        The token with ``type`` set to ``STRING`` and ``value`` set to the literal text.
+    """
     t.value = t.lexer.lexdata[t.lexer.code_start:t.lexer.lexpos - 1]
     t.type = 'STRING'
     t.lexer.lineno += t.value.count('\n')
     t.lexer.begin('INITIAL')
     return t
+
+
+t_string_quote.__doc__ = r"'"
 
 
 def t_string_error(t: lex.LexToken) -> None:

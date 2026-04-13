@@ -43,12 +43,36 @@ class NugetUser(models.Model):
 
     @staticmethod
     def token_exists(token: str | None) -> bool:
-        """Check if a token exists."""
+        """
+        Check if a token exists.
+
+        Parameters
+        ----------
+        token : str | None
+            The API token to look up, or ``None``.
+
+        Returns
+        -------
+        bool
+            ``True`` if the token matches an existing user.
+        """
         return bool(token and NugetUser._default_manager.filter(token=token).exists())
 
     @staticmethod
     def request_has_valid_token(request: HttpRequest) -> bool:
-        """Check if the API key in the request is valid."""
+        """
+        Check if the API key in the request is valid.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request.
+
+        Returns
+        -------
+        bool
+            ``True`` if the ``X-NuGet-ApiKey`` header is valid.
+        """
         return NugetUser.token_exists(request.headers.get('X-NuGet-ApiKey'))
 
 

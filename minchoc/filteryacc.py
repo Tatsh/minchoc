@@ -75,11 +75,9 @@ def p_expression_op(p: yacc.YaccProduction) -> None:
     op: Literal['and', 'eq', 'ne', 'or']
     _, a, op, b = p
     if op == 'and':
-        assert isinstance(b, Q)
-        p[0] &= a & b
+        p[0] &= a & cast('Q', b)
     elif op == 'or':
-        assert isinstance(b, Q)
-        p[0] &= a | b
+        p[0] &= a | cast('Q', b)
     else:
         db_field: str = cast('Sequence[Any]', a.children[0])[0]
         if b == 'null' or (cast('Sequence[Any]', b.children[0])[0]

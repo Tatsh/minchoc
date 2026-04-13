@@ -3,16 +3,22 @@ from __future__ import annotations
 from http import HTTPStatus
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+import json
 import re
 import zipfile
 
 from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.http import HttpRequest, QueryDict
 from minchoc.models import NugetUser, Package
+from minchoc.views import APIV2PackageView
 import pytest
 
 if TYPE_CHECKING:
-    from django.test import Client
+    from django.http import HttpResponse
+    from django.test import Client, RequestFactory
+    from pytest_mock import MockerFixture
 
 GALLERY_RE = rb'/package/somename/1.0.2</d:Gallery'
 
@@ -129,6 +135,120 @@ Some data
                           })
     assert response.json()['error'] == 'Not a zip file'
     assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_put_files_value_is_list(rf: RequestFactory, nuget_user: NugetUser,
+                                 mocker: MockerFixture) -> None:
+    f1 = SimpleUploadedFile('a.zip', b'', content_type='application/zip')
+    f2 = SimpleUploadedFile('b.zip', b'', content_type='application/zip')
+
+    def fake_parse(
+        _self: HttpRequest,
+        _meta: dict[str, str],
+        _stream: object,
+    ) -> tuple[QueryDict, dict[str, list[SimpleUploadedFile]]]:
+        return QueryDict(), {'upload': [f1, f2]}
+
+    mocker.patch.object(HttpRequest, 'parse_file_upload', fake_parse)
+    request = rf.put(
+        '/package/',
+        b'ignored',
+        content_type='multipart/form-data; boundary=x',
+        HTTP_X_NUGET_APIKEY=nuget_user.token.hex,
+    )
+    response = cast('HttpResponse', APIV2PackageView.as_view()(request))
+    assert json.loads(response.content)['error'] == 'More than one file sent'
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_put_nuspec_root_is_none(client: Client, nuget_user: NugetUser,
+                                 mocker: MockerFixture) -> None:
+    parsed = mocker.Mock()
+    parsed.getroot.return_value = None
+    mocker.patch('minchoc.views.parse_xml', return_value=parsed)
+    with NamedTemporaryFile('rb', prefix='minchoc_test', suffix='.nuget') as tf:
+        temp_name = tf.name
+    with zipfile.ZipFile(temp_name, 'w') as z:
+        z.writestr(
+            'a.nuspec', """<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>somename</id>
+    <version>1.0.2</version>
+  </metadata>
+</package>""")
+    content = Path(temp_name).read_bytes()
+    content = (b"""--1234abc\r
+content-disposition: form-data; name="upload"; filename="a.zip"\r
+content-type: application/zip\r
+\r
+""" + content + b"""\r
+--1234abc--""")
+    response = client.put(
+        '/package/',
+        content,
+        'multipart/form-data; boundary=1234abc',
+        headers={
+            'content-length': f'{len(content)}',
+            'x-nuget-apikey': nuget_user.token.hex,
+        },
+    )
+    assert response.json()['error'] == 'Invalid nuspec'
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_put_uploader_not_in_database(client: Client, nuget_user: NugetUser,
+                                      mocker: MockerFixture) -> None:
+    qs_auth = mocker.Mock()
+    qs_auth.exists.return_value = True
+    qs_put = mocker.Mock()
+    qs_put.first.return_value = None
+    mocker.patch.object(
+        NugetUser._default_manager,
+        'filter',
+        side_effect=[qs_auth, qs_put],
+    )
+    with NamedTemporaryFile('rb', prefix='minchoc_test', suffix='.nuget') as tf:
+        temp_name = tf.name
+    with zipfile.ZipFile(temp_name, 'w') as z:
+        z.writestr(
+            'a.nuspec', """<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>somename2</id>
+    <version>1.0.2</version>
+    <title>PACKAGE_NAME (Install)</title>
+    <authors>AUTHORS</authors>
+    <owners>NUGET_MAKER</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectUrl>https://a-url</projectUrl>
+    <description>DESCRIPTION</description>
+    <summary>SUMMARY</summary>
+    <tags>tag1 tag2</tags>
+    <packageSourceUrl>https://a-url-can-be-same-as-project</packageSourceUrl>
+  </metadata>
+</package>""")
+    content = Path(temp_name).read_bytes()
+    content = (b"""--1234abc\r
+content-disposition: form-data; name="upload"; filename="a.zip"\r
+content-type: application/zip\r
+\r
+""" + content + b"""\r
+--1234abc--""")
+    response = client.put(
+        '/package/',
+        content,
+        'multipart/form-data; boundary=1234abc',
+        headers={
+            'content-length': f'{len(content)}',
+            'x-nuget-apikey': nuget_user.token.hex,
+        },
+    )
+    assert response.json()['error'] == 'Uploader not found'
+    assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 def test_find_package_invalid_req(client: Client) -> None:

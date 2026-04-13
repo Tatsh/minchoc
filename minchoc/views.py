@@ -61,13 +61,37 @@ logger = logging.getLogger(__name__)
 
 @require_http_methods(['GET'])
 def home(_request: HttpRequest) -> HttpResponse:
-    """Get the content for the static homepage."""
+    """
+    Get the content for the static homepage.
+
+    Parameters
+    ----------
+    _request : HttpRequest
+        The incoming request (unused).
+
+    Returns
+    -------
+    HttpResponse
+        JSON response with an empty object.
+    """
     return JsonResponse({})
 
 
 @require_http_methods(['GET'])
 def metadata(_request: HttpRequest) -> HttpResponse:
-    """Get content for static page at ``/$metadata`` and at ``/api/v2/$metadata``."""
+    """
+    Get content for static page at ``/$metadata`` and at ``/api/v2/$metadata``.
+
+    Parameters
+    ----------
+    _request : HttpRequest
+        The incoming request (unused).
+
+    Returns
+    -------
+    HttpResponse
+        Service document XML for the NuGet v2 API.
+    """
     return HttpResponse("""<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <service xml:base="http://fixme/api/v2/"
                         xmlns:atom="http://www.w3.org/2005/Atom"
@@ -90,6 +114,16 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
 
     Supports ``$skiptoken`` parameter for pagination in the format:
     ``$skiptoken='PackageName','Version'``.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming ``GET`` request.
+
+    Returns
+    -------
+    HttpResponse
+        Atom feed XML, or ``400`` if required query parameters are missing.
     """
     if sem_ver_level := request.GET.get('semVerLevel'):
         logger.warning('Ignoring semVerLevel=%s', sem_ver_level)
@@ -118,14 +152,16 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
                 content = '\n'.join(
                     make_entry(proto_host, x)
                     for x in (all_packages[skip_index + 1:] if skip_index >= 0 else all_packages))
-                return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
+                feed_xml = f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
+                return HttpResponse(feed_xml % {
                     'BASEURL': proto_host,
                     'UPDATED': datetime.now(timezone.utc).isoformat()
                 },
                                     content_type='application/xml')
             logger.warning('Invalid $skiptoken format: %s', skiptoken)  # pragma: no cover
         content = '\n'.join(make_entry(proto_host, x) for x in queryset)
-        return HttpResponse(f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n' % {
+        feed_xml = f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
+        return HttpResponse(feed_xml % {
             'BASEURL': proto_host,
             'UPDATED': datetime.now(timezone.utc).isoformat()
         },
@@ -143,6 +179,16 @@ def packages(request: HttpRequest) -> HttpResponse:
     currently not supported.
 
     Sample URL: ``/Packages()?$orderby=id&$filter=(tolower(Id) eq 'package-name') and IsLatestVersion&$skip=0&$top=1``
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming ``GET`` request.
+
+    Returns
+    -------
+    HttpResponse
+        Atom feed XML, or JSON error if the ``$filter`` expression is invalid.
     """  # noqa: E501
     filter_ = request.GET.get('$filter')
     req_order_by = request.GET.get('$orderby')
@@ -163,7 +209,8 @@ def packages(request: HttpRequest) -> HttpResponse:
     content = '\n'.join(
         make_entry(proto_host, x)
         for x in Package._default_manager.order_by(order_by).filter(filters)[0:20])
-    return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
+    feed_xml = f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n'
+    return HttpResponse(feed_xml % {
         'BASEURL': proto_host,
         'UPDATED': datetime.now(timezone.utc).isoformat()
     },
@@ -176,12 +223,27 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
     Alternate ``Packages()`` with arguments to find a single package instance.
 
     Sample URL: ``/Packages(Id='name',Version='123.0.0')``
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming ``GET`` request.
+    name : str
+        NuGet package identifier.
+    version : str
+        Package version string.
+
+    Returns
+    -------
+    HttpResponse
+        Atom entry XML if found, or ``404`` if the package does not exist.
     """
     if package := Package._default_manager.filter(nuget_id=name, version=version).first():
         proto = 'https' if request.is_secure() else 'http'
         proto_host = f'{proto}://{request.get_host()}'
         content = make_entry(proto_host, package)
-        return HttpResponse(f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n' % {
+        feed_xml = f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n'
+        return HttpResponse(feed_xml % {
             'BASEURL': proto_host,
             'UPDATED': datetime.now(timezone.utc).isoformat()
         },
@@ -199,6 +261,20 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
 
     This also handles deletions. Deletions will only be allowed with authentication and with
     ``settings.ALLOW_PACKAGE_DELETION`` set to ``True``.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming ``GET`` or ``DELETE`` request.
+    name : str
+        NuGet package identifier.
+    version : str
+        Package version string.
+
+    Returns
+    -------
+    HttpResponse
+        Zip payload, ``204`` on authorised delete, error JSON, ``404``, or ``405``.
     """
     if package := Package._default_manager.filter(nuget_id=name, version=version).first():
         if request.method == 'GET':
@@ -221,13 +297,41 @@ class APIV2PackageView(View):
     """API V2 package upload view."""
     @override
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        """Check if a user is authorised before allowing the request to continue."""
+        """
+        Check if a user is authorised before allowing the request to continue.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming request.
+        *args : Any
+            Positional arguments forwarded to the parent view.
+        **kwargs : Any
+            Keyword arguments forwarded to the parent view.
+
+        Returns
+        -------
+        HttpResponse
+            Forbidden JSON if unauthorised; otherwise the parent dispatch result.
+        """
         if not NugetUser.request_has_valid_token(request):
             return JsonResponse({'error': 'Not authorized'}, status=403)
         return cast('HttpResponse', super().dispatch(request, *args, **kwargs))
 
-    def put(self, request: HttpRequest) -> HttpResponse:  # noqa: PLR6301
-        """Upload a package. This must be a multipart upload with a single valid NuGet file."""
+    def put(self, request: HttpRequest) -> HttpResponse:  # noqa: PLR6301, PLR0911, PLR0912
+        """
+        Upload a package. This must be a multipart upload with a single valid NuGet file.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The upload request.
+
+        Returns
+        -------
+        HttpResponse
+            ``201`` on success, or JSON error with an appropriate status code.
+        """
         if not request.content_type or not request.content_type.startswith('multipart/'):
             return JsonResponse(
                 {'error': f'Invalid content type: {request.content_type or "unknown"}'}, status=400)
@@ -241,7 +345,8 @@ class APIV2PackageView(View):
         if len(request.FILES) > 1:
             return JsonResponse({'error': 'More than one file sent'}, status=400)
         nuget_file = next(iter(request.FILES.values()))
-        assert not isinstance(nuget_file, list)
+        if isinstance(nuget_file, list):
+            return JsonResponse({'error': 'More than one file sent'}, status=400)
         if not zipfile.is_zipfile(nuget_file):
             return JsonResponse({'error': 'Not a zip file'}, status=400)
         with zipfile.ZipFile(nuget_file) as z:
@@ -256,10 +361,11 @@ class APIV2PackageView(View):
             with TemporaryDirectory(suffix='.nuget-parse') as temp_dir:
                 z.extract(nuspecs[0], temp_dir)
                 root = parse_xml(Path(temp_dir) / nuspecs[0].filename).getroot()
+        if root is None:
+            return JsonResponse({'error': 'Invalid nuspec'}, status=400)
         new_package = Package()
         add_tags = []
         add_authors = []
-        assert root is not None
         metadata = root[0]
         for key, column_name in NUSPEC_FIELD_MAPPINGS.items():
             value = tag_text_or(metadata.find(key, NUSPEC_NAMESPACES))
@@ -270,7 +376,6 @@ class APIV2PackageView(View):
                            PACKAGE_FIELDS[column_name].get_internal_type())
             if not column_type or column_type == 'ManyToManyField':
                 if column_name == 'tags':
-                    assert value is not None
                     tags = [x.strip() for x in re.split(r'\s+', value)]
                     for name in tags:
                         new_tag, _ = Tag._default_manager.filter(name=name).get_or_create(name=name)
@@ -300,7 +405,8 @@ class APIV2PackageView(View):
         new_package.file = File(nuget_file, nuget_file.name)
         uploader = NugetUser._default_manager.filter(
             token=request.headers['x-nuget-apikey']).first()
-        assert uploader is not None
+        if uploader is None:
+            return JsonResponse({'error': 'Uploader not found'}, status=500)
         new_package.uploader = uploader
         try:
             new_package.save()
@@ -312,5 +418,17 @@ class APIV2PackageView(View):
         return HttpResponse(status=201)
 
     def post(self, request: HttpRequest) -> HttpResponse:
-        """``POST`` requests are treated the same as ``PUT``."""
+        """
+        Treat ``POST`` requests the same as ``PUT``.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming request.
+
+        Returns
+        -------
+        HttpResponse
+            Result of :py:meth:`put`.
+        """
         return self.put(request)
