@@ -32,12 +32,7 @@ settings.INSTALLED_APPS = [
 ]
 settings.PATH_PREFIX = ''
 extra_classes: tuple[type[Any], ...] = ()
-try:
-    from rest_framework import fields, generics  # type: ignore[import-not-found]
-    extra_classes += (fields.Field, generics.GenericAPIView)
-except ImportError:
-    pass
-django_stubs_ext.monkeypatch(extra_classes=extra_classes)
+django_stubs_ext.monkeypatch()
 django.setup()
 # endregion
 author = f'{authors_list[0]["name"]} <{authors_list[0]["email"]}>'
@@ -63,7 +58,7 @@ html_theme_options = {
     'globaltoc_collapse': True,
     'icon': {
         'edit': 'material/file-edit-outline',
-        'repo': 'fontawesome/brands/gitlab'
+        'repo': 'fontawesome/brands/github'
     },
     'palette': [{
         'media': '(prefers-color-scheme)',

@@ -2,7 +2,6 @@
 *.j2
 *.jsonnet
 *.kate-swp
-*.libjsonnet
 *.libsonnet
 *.lock
 *.log
@@ -17,6 +16,8 @@
 .pnp.*
 .shellcheckrc
 .venv/
+/.cursor/plans/
+/.wiswa-ci/
 /.yarn/**/*.cjs
 /.yarn/install-state.gz
 /build/
@@ -30,4 +31,5 @@ coverage.xml
 htmlcov/
 mypy-report.xml
 node_modules/
+pylock*.toml
 test_django*/

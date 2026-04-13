@@ -1,6 +1,7 @@
 local utils = import 'utils.libjsonnet';
 
 {
+  uses_user_defaults: true,
   // Project-specific
   description: 'Minimal Chocolatey-compatible NuGet server in a Django app.',
   keywords: ['chocolatey', 'django', 'windows'],
@@ -49,6 +50,7 @@ local utils = import 'utils.libjsonnet';
           dev+: {
             dependencies+: {
               'django-stubs': utils.latestPypiPackageVersionCaret('django-stubs'),
+              'types-defusedxml': utils.latestPypiPackageVersionCaret('types-defusedxml'),
             },
           },
           tests+: {
@@ -66,10 +68,10 @@ local utils = import 'utils.libjsonnet';
           },
         },
       },
+      ty+: {
+        environment: { 'extra-paths': ['./.stubs'] },
+      },
     },
-  },
-  copilot+: {
-    intro: 'minchoc is a MINimal CHOColatey-compatible server app for Django.',
   },
   shared_ignore+: ['test_django*/'],
 }
