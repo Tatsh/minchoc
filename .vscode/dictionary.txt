@@ -1,9 +1,8 @@
 Ångström
-amake
 apikey
 apiv
-arequest
 appimage
+arequest
 asyncio
 atoken
 autodoc
