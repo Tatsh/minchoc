@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from django.http import HttpRequest
 from minchoc.models import Company, NugetUser, Package, Tag
 import pytest
 
@@ -32,6 +33,21 @@ def test_package_str(nuget_user: NugetUser) -> None:
 def test_nuget_user_str(nuget_user: NugetUser) -> None:
     nuget_user.base.username = 'fakename'
     assert str(nuget_user) == 'fakename'
+
+
+@pytest.mark.django_db
+def test_token_exists(nuget_user: NugetUser) -> None:
+    assert NugetUser.token_exists(nuget_user.token.hex) is True
+    assert NugetUser.token_exists(None) is False
+
+
+@pytest.mark.django_db
+def test_request_has_valid_token(nuget_user: NugetUser) -> None:
+    request = HttpRequest()
+    request.META['HTTP_X_NUGET_APIKEY'] = nuget_user.token.hex
+    assert NugetUser.request_has_valid_token(request) is True
+    empty_request = HttpRequest()
+    assert NugetUser.request_has_valid_token(empty_request) is False
 
 
 @pytest.mark.django_db

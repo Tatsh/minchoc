@@ -10,6 +10,7 @@ import logging
 import re
 import zipfile
 
+from asgiref.sync import sync_to_async
 from defusedxml.ElementTree import parse as parse_xml
 from django.conf import settings
 from django.core.files import File
@@ -59,6 +60,11 @@ PACKAGE_FIELDS = {f.name: f for f in Package._meta.get_fields()}
 logger = logging.getLogger(__name__)
 
 
+def _read_package_file(package: Package) -> bytes:
+    with package.file.open('rb') as f:
+        return cast('bytes', f.read())
+
+
 @require_http_methods(['GET'])
 def home(_request: HttpRequest) -> HttpResponse:
     """
@@ -106,7 +112,7 @@ def metadata(_request: HttpRequest) -> HttpResponse:
 
 
 @require_http_methods(['GET'])
-def find_packages_by_id(request: HttpRequest) -> HttpResponse:
+async def find_packages_by_id(request: HttpRequest) -> HttpResponse:
     """
     Take a ``GET`` request to find packages.
 
@@ -139,19 +145,15 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
             expected_parts = 2
             if len(parts) == expected_parts:
                 skip_id, skip_version = parts
-                # Filter to get packages after the specified version.
-                # We order by version and filter out versions up to and including skip_version.
                 queryset = queryset.order_by('version')
-                # Get all packages and filter those after the skip_version.
-                all_packages: list[Package] = list(queryset)
+                all_packages: list[Package] = [p async for p in queryset]
                 skip_index = -1
                 for i, pkg in enumerate(all_packages):
                     if pkg.nuget_id == skip_id and pkg.version == skip_version:
                         skip_index = i
                         break
-                content = '\n'.join(
-                    make_entry(proto_host, x)
-                    for x in (all_packages[skip_index + 1:] if skip_index >= 0 else all_packages))
+                selected = (all_packages[skip_index + 1:] if skip_index >= 0 else all_packages)
+                content = '\n'.join([await make_entry(proto_host, x) for x in selected])
                 feed_xml = f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
                 return HttpResponse(feed_xml % {
                     'BASEURL': proto_host,
@@ -159,7 +161,7 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
                 },
                                     content_type='application/xml')
             logger.warning('Invalid $skiptoken format: %s', skiptoken)  # pragma: no cover
-        content = '\n'.join(make_entry(proto_host, x) for x in queryset)
+        content = '\n'.join([await make_entry(proto_host, x) async for x in queryset])
         feed_xml = f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
         return HttpResponse(feed_xml % {
             'BASEURL': proto_host,
@@ -171,7 +173,7 @@ def find_packages_by_id(request: HttpRequest) -> HttpResponse:
 
 
 @require_http_methods(['GET'])
-def packages(request: HttpRequest) -> HttpResponse:
+async def packages(request: HttpRequest) -> HttpResponse:
     """
     Take a ``GET`` request to find packages.
 
@@ -206,9 +208,8 @@ def packages(request: HttpRequest) -> HttpResponse:
         return JsonResponse({'error': 'Invalid syntax in filter.'}, status=400)
     proto = 'https' if request.is_secure() else 'http'
     proto_host = f'{proto}://{request.get_host()}'
-    content = '\n'.join(
-        make_entry(proto_host, x)
-        for x in Package._default_manager.order_by(order_by).filter(filters)[0:20])
+    qs = Package._default_manager.order_by(order_by).filter(filters)[0:20]
+    content = '\n'.join([await make_entry(proto_host, x) async for x in qs])
     feed_xml = f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n'
     return HttpResponse(feed_xml % {
         'BASEURL': proto_host,
@@ -218,7 +219,7 @@ def packages(request: HttpRequest) -> HttpResponse:
 
 
 @require_http_methods(['GET'])
-def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpResponse:
+async def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpResponse:
     """
     Alternate ``Packages()`` with arguments to find a single package instance.
 
@@ -238,10 +239,10 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
     HttpResponse
         Atom entry XML if found, or ``404`` if the package does not exist.
     """
-    if package := Package._default_manager.filter(nuget_id=name, version=version).first():
+    if package := await Package._default_manager.filter(nuget_id=name, version=version).afirst():
         proto = 'https' if request.is_secure() else 'http'
         proto_host = f'{proto}://{request.get_host()}'
-        content = make_entry(proto_host, package)
+        content = await make_entry(proto_host, package)
         feed_xml = f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n'
         return HttpResponse(feed_xml % {
             'BASEURL': proto_host,
@@ -253,7 +254,7 @@ def packages_with_args(request: HttpRequest, name: str, version: str) -> HttpRes
 
 @require_http_methods(['GET', 'DELETE'])
 @csrf_exempt
-def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpResponse:
+async def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpResponse:
     """
     Get the file for a package instance.
 
@@ -276,19 +277,21 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
     HttpResponse
         Zip payload, ``204`` on authorised delete, error JSON, ``404``, or ``405``.
     """
-    if package := Package._default_manager.filter(nuget_id=name, version=version).first():
-        if request.method == 'GET':
-            with package.file.open('rb') as f:
+    if package := await Package._default_manager.filter(nuget_id=name, version=version).afirst():
+        match request.method:
+            case 'GET':
+                data = await sync_to_async(_read_package_file)(package)
                 package.download_count += 1
-                package.save()
-                return HttpResponse(f.read(), content_type='application/zip')
-        if request.method == 'DELETE' and settings.ALLOW_PACKAGE_DELETION:  # type: ignore[misc]
-            if not NugetUser.request_has_valid_token(request):
-                return JsonResponse({'error': 'Not authorized'}, status=403)
-            package.file.delete()
-            package.delete()
-            return HttpResponse(status=204)
-        return HttpResponse(status=405)
+                await package.asave()
+                return HttpResponse(data, content_type='application/zip')
+            case 'DELETE' if settings.ALLOW_PACKAGE_DELETION:  # type: ignore[misc]
+                if not await NugetUser.arequest_has_valid_token(request):
+                    return JsonResponse({'error': 'Not authorized'}, status=403)
+                await sync_to_async(package.file.delete)()
+                await package.adelete()
+                return HttpResponse(status=204)
+            case _:
+                return HttpResponse(status=405)
     return HttpResponseNotFound()
 
 
@@ -296,7 +299,8 @@ def fetch_package_file(request: HttpRequest, name: str, version: str) -> HttpRes
 class APIV2PackageView(View):
     """API V2 package upload view."""
     @override
-    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+    async def dispatch(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+            self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         """
         Check if a user is authorised before allowing the request to continue.
 
@@ -314,11 +318,14 @@ class APIV2PackageView(View):
         HttpResponse
             Forbidden JSON if unauthorised; otherwise the parent dispatch result.
         """
-        if not NugetUser.request_has_valid_token(request):
+        if not await NugetUser.arequest_has_valid_token(request):
             return JsonResponse({'error': 'Not authorized'}, status=403)
-        return cast('HttpResponse', super().dispatch(request, *args, **kwargs))
+        # Django typing stubs treat ``View.dispatch`` as sync, but it awaits async handlers.
+        result = await super().dispatch(  # type: ignore[misc]  # ty: ignore[invalid-await]
+            request, *args, **kwargs)
+        return cast('HttpResponse', result)
 
-    def put(self, request: HttpRequest) -> HttpResponse:  # noqa: PLR6301, PLR0911, PLR0912
+    async def put(self, request: HttpRequest) -> HttpResponse:  # noqa: PLR6301, PLR0911, PLR0912
         """
         Upload a package. This must be a multipart upload with a single valid NuGet file.
 
@@ -378,14 +385,12 @@ class APIV2PackageView(View):
                 if column_name == 'tags':
                     tags = [x.strip() for x in re.split(r'\s+', value)]
                     for name in tags:
-                        new_tag, _ = Tag._default_manager.filter(name=name).get_or_create(name=name)
-                        new_tag.save()
+                        new_tag, _ = await Tag._default_manager.aget_or_create(name=name)
                         add_tags.append(new_tag)
                 elif column_name == 'authors':
                     authors = [x.strip() for x in value.split(',')]
                     for name in authors:
-                        new_author, _ = Author._default_manager.get_or_create(name=name)
-                        new_author.save()
+                        new_author, _ = await Author._default_manager.aget_or_create(name=name)
                         add_authors.append(new_author)
                 else:  # pragma no cover
                     logger.warning('Did not set %s', column_name)
@@ -403,21 +408,21 @@ class APIV2PackageView(View):
             pass
         new_package.size = cast('int', nuget_file.size)
         new_package.file = File(nuget_file, nuget_file.name)
-        uploader = NugetUser._default_manager.filter(
-            token=request.headers['x-nuget-apikey']).first()
+        uploader = await NugetUser._default_manager.filter(token=request.headers['x-nuget-apikey']
+                                                           ).afirst()
         if uploader is None:
             return JsonResponse({'error': 'Uploader not found'}, status=500)
         new_package.uploader = uploader
         try:
-            new_package.save()
+            await new_package.asave()
         except IntegrityError:
             return JsonResponse({'error': 'Integrity error (has this already been uploaded?)'},
                                 status=400)
-        new_package.tags.add(*add_tags)
-        new_package.authors.add(*add_authors)
+        await new_package.tags.aadd(*add_tags)
+        await new_package.authors.aadd(*add_authors)
         return HttpResponse(status=201)
 
-    def post(self, request: HttpRequest) -> HttpResponse:
+    async def post(self, request: HttpRequest) -> HttpResponse:
         """
         Treat ``POST`` requests the same as ``PUT``.
 
@@ -431,4 +436,4 @@ class APIV2PackageView(View):
         HttpResponse
             Result of :py:meth:`put`.
         """
-        return self.put(request)
+        return await self.put(request)

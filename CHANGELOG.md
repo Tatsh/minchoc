@@ -10,6 +10,20 @@ and this project adheres to
 
 ## [unreleased]
 
+### Added
+
+- Async `NugetUser.atoken_exists` and `NugetUser.arequest_has_valid_token` helpers; sync
+  counterparts remain.
+
+### Changed
+
+- Converted views and helpers to Django's async view support.
+  - `find_packages_by_id`, `packages`, `packages_with_args`, and `fetch_package_file` are now
+    `async def`.
+  - `APIV2PackageView` `dispatch`, `put`, and `post` are now `async def`.
+  - `make_entry` is now `async def`.
+  - `home` and `metadata` remain synchronous.
+
 ## [0.1.0]
 
 ### Added

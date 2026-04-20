@@ -59,6 +59,23 @@ class NugetUser(models.Model):
         return bool(token and NugetUser._default_manager.filter(token=token).exists())
 
     @staticmethod
+    async def atoken_exists(token: str | None) -> bool:
+        """
+        Asynchronously check if a token exists.
+
+        Parameters
+        ----------
+        token : str | None
+            The API token to look up, or ``None``.
+
+        Returns
+        -------
+        bool
+            ``True`` if the token matches an existing user.
+        """
+        return bool(token and await NugetUser._default_manager.filter(token=token).aexists())
+
+    @staticmethod
     def request_has_valid_token(request: HttpRequest) -> bool:
         """
         Check if the API key in the request is valid.
@@ -74,6 +91,23 @@ class NugetUser(models.Model):
             ``True`` if the ``X-NuGet-ApiKey`` header is valid.
         """
         return NugetUser.token_exists(request.headers.get('X-NuGet-ApiKey'))
+
+    @staticmethod
+    async def arequest_has_valid_token(request: HttpRequest) -> bool:
+        """
+        Asynchronously check if the API key in the request is valid.
+
+        Parameters
+        ----------
+        request : HttpRequest
+            The incoming HTTP request.
+
+        Returns
+        -------
+        bool
+            ``True`` if the ``X-NuGet-ApiKey`` header is valid.
+        """
+        return await NugetUser.atoken_exists(request.headers.get('X-NuGet-ApiKey'))
 
 
 def post_save_receiver(
@@ -145,9 +179,8 @@ class Package(models.Model):
     version_beta = models.CharField(max_length=128, null=True)
 
     class Meta(TypedModelMeta):
-        constraints = [  # noqa: RUF012
-            models.UniqueConstraint(fields=('nuget_id', 'version'), name='id_and_version_uniq')
-        ]
+        constraints = (models.UniqueConstraint(fields=('nuget_id', 'version'),
+                                               name='id_and_version_uniq'),)
 
     @override
     def __str__(self) -> str:

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 __all__ = ('make_entry', 'tag_text_or')
 
 
-def make_entry(host: str, package: Package, ending: str = '\n') -> str:
+async def make_entry(host: str, package: Package, ending: str = '\n') -> str:
     """
     Create a package ``<entry>`` element for a package XML feed.
 
@@ -31,8 +31,10 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
     str
         The rendered XML ``<entry>`` element.
     """
-    total_downloads = Package._default_manager.filter(nuget_id=package.nuget_id).aggregate(
-        total_downloads=Sum('download_count'))['total_downloads']
+    total_downloads = (await Package._default_manager.filter(nuget_id=package.nuget_id).aaggregate(
+        total_downloads=Sum('download_count')))['total_downloads']
+    first_author = await package.authors.afirst()
+    tag_names = ' '.join([t.name async for t in package.tags.all()])
     return f"""<entry>
     <id>{host}/api/v2/Packages(Id='{package.nuget_id}',Version='{package.version}')</id>
     <category term="NuGetGallery.V2FeedPackage"
@@ -42,7 +44,7 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
     <title type="text">{package.nuget_id}</title>
     <summary type="text">{package.nuget_id}</summary>
     <updated>{package.published.isoformat()}</updated>
-    <author><name>{package.authors.first() or ''}</name></author>
+    <author><name>{first_author or ''}</name></author>
     <link rel="edit-media" title="V2FeedPackage"
         href="Packages(Id='{package.nuget_id}',Version='{package.version}')/$value" />
     <content type="application/zip"
@@ -72,7 +74,7 @@ def make_entry(host: str, package: Package, ending: str = '\n') -> str:
         <d:ReleaseNotes>{package.release_notes or ''}</d:ReleaseNotes>
         <d:RequireLicenseAcceptance m:type="Edm.Boolean">{'true' if package.require_license_acceptance else 'false'}</d:RequireLicenseAcceptance>
         <d:Summary>{package.summary or ''}</d:Summary>
-        <d:Tags xml:space="preserve"> {' '.join(x.name for x in package.tags.all())} </d:Tags>
+        <d:Tags xml:space="preserve"> {tag_names} </d:Tags>
         <d:Title>{package.title}</d:Title>
         <d:Version>{package.version}</d:Version>
         <d:VersionDownloadCount m:type="Edm.Int32">{package.download_count}</d:VersionDownloadCount>

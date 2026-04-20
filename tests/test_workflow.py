@@ -3,11 +3,12 @@ from __future__ import annotations
 from http import HTTPStatus
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 import json
 import re
 import zipfile
 
+from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpRequest, QueryDict
@@ -157,7 +158,7 @@ def test_put_files_value_is_list(rf: RequestFactory, nuget_user: NugetUser,
         content_type='multipart/form-data; boundary=x',
         HTTP_X_NUGET_APIKEY=nuget_user.token.hex,
     )
-    response = cast('HttpResponse', APIV2PackageView.as_view()(request))
+    response = cast('HttpResponse', async_to_sync(cast('Any', APIV2PackageView.as_view()))(request))
     assert json.loads(response.content)['error'] == 'More than one file sent'
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
@@ -203,9 +204,9 @@ content-type: application/zip\r
 def test_put_uploader_not_in_database(client: Client, nuget_user: NugetUser,
                                       mocker: MockerFixture) -> None:
     qs_auth = mocker.Mock()
-    qs_auth.exists.return_value = True
+    qs_auth.aexists = mocker.AsyncMock(return_value=True)
     qs_put = mocker.Mock()
-    qs_put.first.return_value = None
+    qs_put.afirst = mocker.AsyncMock(return_value=None)
     mocker.patch.object(
         NugetUser._default_manager,
         'filter',
