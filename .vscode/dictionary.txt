@@ -1,8 +1,11 @@
 Ångström
+amake
 apikey
 apiv
+arequest
 appimage
 asyncio
+atoken
 autodoc
 automodule
 bascom
