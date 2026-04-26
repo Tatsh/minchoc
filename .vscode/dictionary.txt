@@ -77,7 +77,6 @@ norecursedirs
 npmjs
 nugetuser
 numpy
-numpydoc
 nuspecs
 olatey
 oneline

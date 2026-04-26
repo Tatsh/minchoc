@@ -144,20 +144,15 @@ def test_put_files_value_is_list(rf: RequestFactory, nuget_user: NugetUser,
     f1 = SimpleUploadedFile('a.zip', b'', content_type='application/zip')
     f2 = SimpleUploadedFile('b.zip', b'', content_type='application/zip')
 
-    def fake_parse(
-        _self: HttpRequest,
-        _meta: dict[str, str],
-        _stream: object,
-    ) -> tuple[QueryDict, dict[str, list[SimpleUploadedFile]]]:
+    def fake_parse(_self: HttpRequest, _meta: dict[str, str],
+                   _stream: object) -> tuple[QueryDict, dict[str, list[SimpleUploadedFile]]]:
         return QueryDict(), {'upload': [f1, f2]}
 
     mocker.patch.object(HttpRequest, 'parse_file_upload', fake_parse)
-    request = rf.put(
-        '/package/',
-        b'ignored',
-        content_type='multipart/form-data; boundary=x',
-        HTTP_X_NUGET_APIKEY=nuget_user.token.hex,
-    )
+    request = rf.put('/package/',
+                     b'ignored',
+                     content_type='multipart/form-data; boundary=x',
+                     HTTP_X_NUGET_APIKEY=nuget_user.token.hex)
     response = cast('HttpResponse', async_to_sync(cast('Any', APIV2PackageView.as_view()))(request))
     assert json.loads(response.content)['error'] == 'More than one file sent'
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -187,15 +182,13 @@ content-type: application/zip\r
 \r
 """ + content + b"""\r
 --1234abc--""")
-    response = client.put(
-        '/package/',
-        content,
-        'multipart/form-data; boundary=1234abc',
-        headers={
-            'content-length': f'{len(content)}',
-            'x-nuget-apikey': nuget_user.token.hex,
-        },
-    )
+    response = client.put('/package/',
+                          content,
+                          'multipart/form-data; boundary=1234abc',
+                          headers={
+                              'content-length': f'{len(content)}',
+                              'x-nuget-apikey': nuget_user.token.hex
+                          })
     assert response.json()['error'] == 'Invalid nuspec'
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
@@ -207,11 +200,7 @@ def test_put_uploader_not_in_database(client: Client, nuget_user: NugetUser,
     qs_auth.aexists = mocker.AsyncMock(return_value=True)
     qs_put = mocker.Mock()
     qs_put.afirst = mocker.AsyncMock(return_value=None)
-    mocker.patch.object(
-        NugetUser._default_manager,
-        'filter',
-        side_effect=[qs_auth, qs_put],
-    )
+    mocker.patch.object(NugetUser._default_manager, 'filter', side_effect=[qs_auth, qs_put])
     with NamedTemporaryFile('rb', prefix='minchoc_test', suffix='.nuget') as tf:
         temp_name = tf.name
     with zipfile.ZipFile(temp_name, 'w') as z:
@@ -239,15 +228,13 @@ content-type: application/zip\r
 \r
 """ + content + b"""\r
 --1234abc--""")
-    response = client.put(
-        '/package/',
-        content,
-        'multipart/form-data; boundary=1234abc',
-        headers={
-            'content-length': f'{len(content)}',
-            'x-nuget-apikey': nuget_user.token.hex,
-        },
-    )
+    response = client.put('/package/',
+                          content,
+                          'multipart/form-data; boundary=1234abc',
+                          headers={
+                              'content-length': f'{len(content)}',
+                              'x-nuget-apikey': nuget_user.token.hex
+                          })
     assert response.json()['error'] == 'Uploader not found'
     assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -294,15 +281,13 @@ content-type: application/zip\r
 \r
 """ + content + b"""\r
 --1234abc--""")
-        response = client.put(
-            '/package/',
-            content,
-            'multipart/form-data; boundary=1234abc',
-            headers={
-                'content-length': f'{len(content)}',
-                'x-nuget-apikey': nuget_user.token.hex
-            },
-        )
+        response = client.put('/package/',
+                              content,
+                              'multipart/form-data; boundary=1234abc',
+                              headers={
+                                  'content-length': f'{len(content)}',
+                                  'x-nuget-apikey': nuget_user.token.hex
+                              })
         assert response.status_code == HTTPStatus.CREATED
 
     # Test without skiptoken - should return all versions
@@ -424,8 +409,7 @@ content-type: application/zip\r
     response = client.get(
         '/Packages()',
         QUERY_STRING="$filter=(tolower(Id) eq 'somename') and IsLatestVersion&$orderby=id"
-        '&semVerLevel=2.0.0&$skip=0&$top=1',
-    )
+        '&semVerLevel=2.0.0&$skip=0&$top=1')
     assert re.search(GALLERY_RE, response.content) is not None
     assert response.status_code == HTTPStatus.OK
     # search as performed with ``choco search somename``

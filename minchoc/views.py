@@ -53,7 +53,7 @@ NUSPEC_FIELD_MAPPINGS = {
     NUSPEC_FIELD_SUMMARY: 'summary',
     NUSPEC_FIELD_TAGS: 'tags',
     NUSPEC_FIELD_TITLE: 'title',
-    NUSPEC_FIELD_VERSION: 'version',
+    NUSPEC_FIELD_VERSION: 'version'
 }
 PACKAGE_FIELDS = {f.name: f for f in Package._meta.get_fields()}
 
