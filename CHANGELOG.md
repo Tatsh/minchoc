@@ -10,18 +10,21 @@ and this project adheres to
 
 ## [unreleased]
 
+## [0.2.0] - 2026-04-27
+
 ### Added
 
-- Async `NugetUser.atoken_exists` and `NugetUser.arequest_has_valid_token` helpers; sync
-  counterparts remain.
+- Asynchronous `NugetUser.atoken_exists` and `NugetUser.arequest_has_valid_token` methods. The
+  synchronous counterparts remain available.
 
 ### Changed
 
-- Converted views and helpers to Django's async view support.
+- Converted views and helpers to use Django's asynchronous view support.
   - `find_packages_by_id`, `packages`, `packages_with_args`, and `fetch_package_file` are now
+    declared with `async def`.
+  - The `dispatch`, `put`, and `post` methods on `APIV2PackageView` are now declared with
     `async def`.
-  - `APIV2PackageView` `dispatch`, `put`, and `post` are now `async def`.
-  - `make_entry` is now `async def`.
+  - `make_entry` is now declared with `async def`.
   - `home` and `metadata` remain synchronous.
 
 ## [0.1.0]
@@ -70,7 +73,8 @@ and this project adheres to
 
 - Removed `WANT_NUGET_HOME` setting.
 
-[unreleased]: https://github.com/Tatsh/pychoco/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/Tatsh/pychoco/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Tatsh/minchoc/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Tatsh/minchoc/compare/v0.0.11...v0.1.0
 [0.0.11]: https://github.com/Tatsh/minchoc/compare/v0.0.6...v0.0.11
 [0.0.6]: https://github.com/Tatsh/minchoc/compare/v0.0.5...v0.0.6

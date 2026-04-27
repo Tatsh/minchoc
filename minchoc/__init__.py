@@ -4,4 +4,4 @@ from __future__ import annotations
 import django_stubs_ext
 
 django_stubs_ext.monkeypatch()  # noqa: RUF067
-__version__ = '0.1.0'
+__version__ = '0.2.0'

@@ -6,7 +6,7 @@ local utils = import 'utils.libjsonnet';
   description: 'Minimal Chocolatey-compatible NuGet server in a Django app.',
   keywords: ['chocolatey', 'django', 'windows'],
   project_name: 'minchoc',
-  version: '0.1.0',
+  version: '0.2.0',
   citation+: {
     'date-released': '2025-04-15',
   },
