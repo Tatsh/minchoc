@@ -8,7 +8,7 @@ dev = [
   "cz-path>=0.0.6",
   "django-stubs>=6.0.2",
   "mypy>=1.20.1",
-  "ruff==0.15.11",
+  "ruff==0.15.12",
   "ty>=0.0.31",
   "types-defusedxml>=0.7.0.20260408",
   "yapf>=0.43.0",
