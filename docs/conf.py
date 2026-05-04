@@ -90,4 +90,8 @@ html_theme_options = {
     'site_url': 'https://minchoc.readthedocs.org',
     'toc_title_is_page_title': True
 }
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+intersphinx_mapping = {
+    'defusedxml': ('https://defusedxml.readthedocs.io/en/latest/', None),
+    'python': ('https://docs.python.org/3', None),
+    'typing-extensions': ('https://typing-extensions.readthedocs.io/en/latest/', None)
+}
