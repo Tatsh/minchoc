@@ -7,6 +7,7 @@ local utils = import 'utils.libjsonnet';
   keywords: ['chocolatey', 'django', 'windows'],
   project_name: 'minchoc',
   version: '0.2.0',
+  security_policy_supported_versions: { '0.2.x': ':white_check_mark:' },
   citation+: {
     'date-released': '2025-04-15',
   },
