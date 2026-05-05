@@ -91,7 +91,8 @@ html_theme_options = {
     'toc_title_is_page_title': True
 }
 intersphinx_mapping = {
-    'defusedxml': ('https://defusedxml.readthedocs.io/en/latest/', None),
+    'django': ('https://docs.djangoproject.com/en/stable/', None),
+    'ply': ('https://ply.readthedocs.io/en/latest/', None),
     'python': ('https://docs.python.org/3', None),
     'typing-extensions': ('https://typing-extensions.readthedocs.io/en/latest/', None)
 }
