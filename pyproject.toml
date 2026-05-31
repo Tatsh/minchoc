@@ -4,13 +4,13 @@ requires = ["hatchling"]
 
 [dependency-groups]
 dev = [
-  "commitizen>=4.13.10",
-  "cz-path>=0.0.6",
-  "django-stubs>=6.0.2",
-  "mypy>=1.20.1",
-  "ruff==0.15.13",
-  "ty>=0.0.31",
-  "types-defusedxml>=0.7.0.20260408",
+  "commitizen>=4.16.2",
+  "cz-path>=0.0.7",
+  "django-stubs>=6.0.4",
+  "mypy>=2.1.0",
+  "ruff==0.15.14",
+  "ty>=0.0.39",
+  "types-defusedxml>=0.7.0.20260504",
   "yapf>=0.43.0",
 ]
 docs = [
@@ -22,7 +22,7 @@ docs = [
   "sphinx-datatables>=1.0.0",
   "sphinx-immaterial>=0.13.9",
   "sphinx>=9.1.0; python_version >= \"3.13\"",
-  "tomlkit>=0.14.0",
+  "tomlkit>=0.15.0",
 ]
 tests = [
   "coveralls>=4.1.0",
@@ -52,7 +52,7 @@ classifiers = [
 ]
 dependencies = [
   "defusedxml>=0.7.1",
-  "django-stubs-ext>=6.0.2",
+  "django-stubs-ext>=6.0.4",
   "django>=5.2.11",
   "ply>=3.11",
   "typing-extensions>=4.15.0",
