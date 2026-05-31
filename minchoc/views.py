@@ -111,6 +111,56 @@ def metadata(_request: HttpRequest) -> HttpResponse:
                         content_type='application/xml')
 
 
+async def _find_packages_by_id_feed(request: HttpRequest, proto_host: str) -> HttpResponse:
+    """
+    Build the Atom feed for :py:func:`find_packages_by_id`.
+
+    Parameters
+    ----------
+    request : HttpRequest
+        The incoming ``GET`` request.
+    proto_host : str
+        The scheme and host prefix used when building entry URLs.
+
+    Returns
+    -------
+    HttpResponse
+        Atom feed XML for the requested package identifier.
+    """
+    nuget_id = request.GET['id'].replace("'", '')
+    queryset = Package._default_manager.filter(nuget_id=nuget_id)
+    if skiptoken := request.GET.get('$skiptoken'):
+        # Parse skiptoken format: `'PackageName','Version'`.
+        # Remove quotes and split by comma.
+        parts = [part.strip().strip('\'"') for part in skiptoken.split(',')]
+        expected_parts = 2
+        if len(parts) == expected_parts:
+            skip_id, skip_version = parts
+            queryset = queryset.order_by('version')
+            all_packages: list[Package] = [p async for p in queryset]
+            skip_index = -1
+            for i, pkg in enumerate(all_packages):
+                if pkg.nuget_id == skip_id and pkg.version == skip_version:
+                    skip_index = i
+                    break
+            selected = (all_packages[skip_index + 1:] if skip_index >= 0 else all_packages)
+            content = '\n'.join([await make_entry(proto_host, x) for x in selected])
+            feed_xml = f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
+            return HttpResponse(feed_xml % {
+                'BASEURL': proto_host,
+                'UPDATED': datetime.now(timezone.utc).isoformat()
+            },
+                                content_type='application/xml')
+        logger.warning('Invalid $skiptoken format: %s', skiptoken)  # pragma: no cover
+    content = '\n'.join([await make_entry(proto_host, x) async for x in queryset])
+    feed_xml = f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
+    return HttpResponse(feed_xml % {
+        'BASEURL': proto_host,
+        'UPDATED': datetime.now(timezone.utc).isoformat()
+    },
+                        content_type='application/xml')
+
+
 @require_http_methods(['GET'])
 async def find_packages_by_id(request: HttpRequest) -> HttpResponse:
     """
@@ -136,38 +186,7 @@ async def find_packages_by_id(request: HttpRequest) -> HttpResponse:
     proto = 'https' if request.is_secure() else 'http'
     proto_host = f'{proto}://{request.get_host()}'
     try:
-        nuget_id = request.GET['id'].replace("'", '')
-        queryset = Package._default_manager.filter(nuget_id=nuget_id)
-        if skiptoken := request.GET.get('$skiptoken'):
-            # Parse skiptoken format: `'PackageName','Version'`.
-            # Remove quotes and split by comma.
-            parts = [part.strip().strip('\'"') for part in skiptoken.split(',')]
-            expected_parts = 2
-            if len(parts) == expected_parts:
-                skip_id, skip_version = parts
-                queryset = queryset.order_by('version')
-                all_packages: list[Package] = [p async for p in queryset]
-                skip_index = -1
-                for i, pkg in enumerate(all_packages):
-                    if pkg.nuget_id == skip_id and pkg.version == skip_version:
-                        skip_index = i
-                        break
-                selected = (all_packages[skip_index + 1:] if skip_index >= 0 else all_packages)
-                content = '\n'.join([await make_entry(proto_host, x) for x in selected])
-                feed_xml = f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
-                return HttpResponse(feed_xml % {
-                    'BASEURL': proto_host,
-                    'UPDATED': datetime.now(timezone.utc).isoformat()
-                },
-                                    content_type='application/xml')
-            logger.warning('Invalid $skiptoken format: %s', skiptoken)  # pragma: no cover
-        content = '\n'.join([await make_entry(proto_host, x) async for x in queryset])
-        feed_xml = f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
-        return HttpResponse(feed_xml % {
-            'BASEURL': proto_host,
-            'UPDATED': datetime.now(timezone.utc).isoformat()
-        },
-                            content_type='application/xml')
+        return await _find_packages_by_id_feed(request, proto_host)
     except KeyError:
         return HttpResponse(status=400)
 
