@@ -210,7 +210,7 @@ async def packages(request: HttpRequest) -> HttpResponse:
     -------
     HttpResponse
         Atom feed XML, or JSON error if the ``$filter`` expression is invalid.
-    """  # noqa: E501
+    """  # ruff:ignore[line-too-long]
     filter_ = request.GET.get('$filter')
     req_order_by = request.GET.get('$orderby')
     order_by = (FIELD_MAPPING[req_order_by]
@@ -344,7 +344,9 @@ class APIV2PackageView(View):
             request, *args, **kwargs)
         return cast('HttpResponse', result)
 
-    async def put(self, request: HttpRequest) -> HttpResponse:  # noqa: PLR6301, PLR0911, PLR0912
+    async def put(
+        self, request: HttpRequest
+    ) -> HttpResponse:  # ruff:ignore[no-self-use, too-many-return-statements, too-many-branches]
         """
         Upload a package. This must be a multipart upload with a single valid NuGet file.
 

@@ -79,7 +79,7 @@ async def make_entry(host: str, package: Package, ending: str = '\n') -> str:
         <d:Version>{package.version}</d:Version>
         <d:VersionDownloadCount m:type="Edm.Int32">{package.download_count}</d:VersionDownloadCount>
     </m:properties>
-</entry>{ending}"""  # noqa: E501
+</entry>{ending}"""  # ruff:ignore[line-too-long]
 
 
 def tag_text_or(tag: Element | None, default: str | None = None) -> str | None:

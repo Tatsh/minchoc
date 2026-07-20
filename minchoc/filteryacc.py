@@ -1,11 +1,11 @@
 """Parser."""
-# ruff: noqa: D205,D208,D209,D400,D403
+# ruff:file-ignore[missing-blank-line-after-summary, over-indentation, new-line-after-last-paragraph, missing-trailing-period, first-word-uncapitalized]
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from django.db.models import Q
-from minchoc.filterlex import tokens  # noqa: F401
+from minchoc.filterlex import tokens  # ruff:ignore[unused-import]
 from ply import yacc
 
 if TYPE_CHECKING:
@@ -68,7 +68,7 @@ def p_expression_op(p: yacc.YaccProduction) -> None:
     """expression : expression OR expression
                   | expression AND expression
                   | expression NE expression
-                  | expression EQ expression"""  # noqa: DOC501
+                  | expression EQ expression"""  # ruff:ignore[docstring-missing-exception]
     setup_p0(p)
     a: Q
     b: Q | str

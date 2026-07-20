@@ -1,4 +1,4 @@
-# ruff: noqa: E303,I001
+# ruff:file-ignore[too-many-blank-lines, unsorted-imports]
 from collections.abc import Iterator
 from typing import Any
 
@@ -50,7 +50,7 @@ class YaccProduction:
 
 
 class Parser:
-    def parse(self, input: str, debug: bool = ...) -> Any:  # noqa: A002
+    def parse(self, input: str, debug: bool = ...) -> Any:  # ruff:ignore[builtin-argument-shadowing]
         ...
 
 
