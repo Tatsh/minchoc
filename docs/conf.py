@@ -36,7 +36,7 @@ django_stubs_ext.monkeypatch()
 django.setup()
 # endregion
 author = f'{authors_list[0]["name"]} <{authors_list[0]["email"]}>'
-copyright = str(datetime.now(timezone.utc).year)  # noqa: A001
+copyright = str(datetime.now(timezone.utc).year)  # ruff:ignore[builtin-variable-shadowing]
 project = name
 release = f'v{version}'
 extensions = [

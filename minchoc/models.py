@@ -1,5 +1,5 @@
 """Model definitions."""
-# ruff: noqa: D106, DJ001
+# ruff:file-ignore[undocumented-public-nested-class, django-nullable-model-string-field]
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
@@ -111,9 +111,9 @@ class NugetUser(models.Model):
 
 
 def post_save_receiver(
-        sender: AbstractUser,  # noqa: ARG001
+        sender: AbstractUser,  # ruff:ignore[unused-function-argument]
         instance: AbstractUser,
-        **kwargs: Any) -> None:  # noqa: ARG001
+        **kwargs: Any) -> None:  # ruff:ignore[unused-function-argument]
     """Create a ``NugetUser`` when a new user is saved."""
     if not NugetUser._default_manager.filter(base=instance).exists():
         nuget_user = NugetUser()

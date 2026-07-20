@@ -1,5 +1,5 @@
 """Lexer."""
-# ruff: noqa: D300,D400,N816
+# ruff:file-ignore[triple-single-quotes, missing-trailing-period, mixed-case-variable-in-global-scope]
 from __future__ import annotations
 
 from typing import Any
@@ -69,7 +69,7 @@ t_string_quote.__doc__ = r"'"
 
 
 def t_string_error(t: lex.LexToken) -> None:
-    # print("illegal character '%s'" % t.value[0])  # noqa: ERA001
+    # print("illegal character '%s'" % t.value[0])  # ruff:ignore[commented-out-code]
     t.lexer.skip(1)
 
 
