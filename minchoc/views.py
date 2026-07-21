@@ -344,9 +344,7 @@ class APIV2PackageView(View):
             request, *args, **kwargs)
         return cast('HttpResponse', result)
 
-    async def put(
-        self, request: HttpRequest
-    ) -> HttpResponse:  # ruff:ignore[no-self-use, too-many-return-statements, too-many-branches]
+    async def put(self, request: HttpRequest) -> HttpResponse:
         """
         Upload a package. This must be a multipart upload with a single valid NuGet file.
 
