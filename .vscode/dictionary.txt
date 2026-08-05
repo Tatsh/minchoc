@@ -45,6 +45,7 @@ functools
 genindex
 getslice
 globaltoc
+handoff
 hoverxref
 htmlcov
 imal
@@ -108,10 +109,10 @@ shellcheck
 shellformat
 skiptoken
 snapcraft
-softprops
 somename
 soupsieve
 sphinxcontrib
+statusline
 substringof
 tabversion
 tatsh
@@ -131,6 +132,7 @@ urlpatterns
 vendored
 venv
 virtualenv
+winget
 wiswa
 wiswa's
 worktree
@@ -138,3 +140,4 @@ wsgi
 yapf
 yapfignore
 yarnrc
+zizmor

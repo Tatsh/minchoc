@@ -50,7 +50,10 @@ class YaccProduction:
 
 
 class Parser:
-    def parse(self, input: str, debug: bool = ...) -> Any:  # ruff:ignore[builtin-argument-shadowing]
+    def parse(
+            self,
+            input: str,  # ruff: ignore[builtin-argument-shadowing]
+            debug: bool = ...) -> Any:
         ...
 
 
