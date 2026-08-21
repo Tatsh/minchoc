@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, AnyStr, cast
 import logging
 import re
 import zipfile
@@ -325,7 +325,7 @@ class _UploadError(Exception):
         self.status = status
 
 
-def _uploaded_nuget_file(request: HttpRequest) -> UploadedFile:
+def _uploaded_nuget_file(request: HttpRequest) -> UploadedFile[AnyStr]:
     """
     Get the single uploaded NuGet file from a multipart request.
 
@@ -352,7 +352,7 @@ def _uploaded_nuget_file(request: HttpRequest) -> UploadedFile:
     except MultiPartParserError as e:
         msg = 'Invalid upload'
         raise _UploadError(msg) from e
-    request.FILES.update(cast('SupportsKeysAndGetItem[str, UploadedFile]', files))
+    request.FILES.update(cast('SupportsKeysAndGetItem[str, UploadedFile[AnyStr]]', files))
     if len(request.FILES) == 0:
         msg = 'No files sent'
         raise _UploadError(msg)
@@ -369,7 +369,7 @@ def _uploaded_nuget_file(request: HttpRequest) -> UploadedFile:
     return nuget_file
 
 
-def _parse_nuspec_metadata(nuget_file: UploadedFile) -> Element:
+def _parse_nuspec_metadata(nuget_file: UploadedFile[AnyStr]) -> Element:
     """
     Extract and parse the nuspec file contained in an uploaded package.
 

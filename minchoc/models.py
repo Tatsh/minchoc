@@ -168,7 +168,7 @@ class Package(models.Model):
     size = models.PositiveIntegerField()
     source_url = models.URLField(null=True)
     summary = models.TextField(null=True)
-    tags = models.ManyToManyField(Tag)  # type: ignore[var-annotated]
+    tags = models.ManyToManyField(Tag)
     title = models.CharField(max_length=255)
     uploader = models.ForeignKey(NugetUser, on_delete=models.CASCADE)
     version = models.CharField(max_length=128)
