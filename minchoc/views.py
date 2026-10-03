@@ -1,7 +1,7 @@
 """Views."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -151,7 +151,7 @@ async def _find_packages_by_id_feed(request: HttpRequest, proto_host: str) -> Ht
             feed_xml = f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
             return HttpResponse(feed_xml % {
                 'BASEURL': proto_host,
-                'UPDATED': datetime.now(timezone.utc).isoformat()
+                'UPDATED': datetime.now(UTC).isoformat()
             },
                                 content_type='application/xml')
         logger.warning('Invalid $skiptoken format: %s', skiptoken)  # pragma: no cover
@@ -159,7 +159,7 @@ async def _find_packages_by_id_feed(request: HttpRequest, proto_host: str) -> Ht
     feed_xml = f'{FEED_XML_PRE}{content}{FEED_XML_POST}\n'
     return HttpResponse(feed_xml % {
         'BASEURL': proto_host,
-        'UPDATED': datetime.now(timezone.utc).isoformat()
+        'UPDATED': datetime.now(UTC).isoformat()
     },
                         content_type='application/xml')
 
@@ -235,7 +235,7 @@ async def packages(request: HttpRequest) -> HttpResponse:
     feed_xml = f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n'
     return HttpResponse(feed_xml % {
         'BASEURL': proto_host,
-        'UPDATED': datetime.now(timezone.utc).isoformat()
+        'UPDATED': datetime.now(UTC).isoformat()
     },
                         content_type='application/xml')
 
@@ -268,7 +268,7 @@ async def packages_with_args(request: HttpRequest, name: str, version: str) -> H
         feed_xml = f'{FEED_XML_PRE}\n{content}{FEED_XML_POST}\n'
         return HttpResponse(feed_xml % {
             'BASEURL': proto_host,
-            'UPDATED': datetime.now(timezone.utc).isoformat()
+            'UPDATED': datetime.now(UTC).isoformat()
         },
                             content_type='application/xml')
     return HttpResponseNotFound()

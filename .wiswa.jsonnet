@@ -6,6 +6,8 @@ local utils = import 'utils.libjsonnet';
   description: 'Minimal Chocolatey-compatible NuGet server in a Django app.',
   keywords: ['chocolatey', 'django', 'windows'],
   project_name: 'minchoc',
+  // django-stubs-ext 6.1.1 requires Python 3.11.
+  supported_python_versions: ['3.11', '3.12', '3.13', '3.14'],
   version: '0.2.0',
   security_policy_supported_versions: { '0.2.x': ':white_check_mark:' },
   citation+: {

@@ -1,4 +1,3 @@
-Ångström
 apikey
 apiv
 appimage
@@ -7,6 +6,7 @@ asyncio
 atoken
 autodoc
 automodule
+autouse
 bascom
 bsky
 cdrommsf
@@ -14,7 +14,6 @@ choc
 choco
 commitizen
 conftest
-cooldown
 coveragerc
 coverallsapp
 ctypes
@@ -49,7 +48,6 @@ handoff
 hoverxref
 htmlcov
 imal
-intersphinx
 islatestversion
 isort
 itertools
@@ -74,9 +72,13 @@ monkeypatch
 myproject
 mypy
 namedtuples
+noone
+noqa
 norecursedirs
 nugetuser
+nullglob
 numpy
+numpydoc
 nuspecs
 olatey
 oneline
@@ -85,6 +87,7 @@ parsetab
 pathlib
 pavelzw
 plistlib
+popen
 preapproved
 pycache
 pychoco
@@ -101,12 +104,14 @@ pythonhosted
 regen
 ripgreprc
 rstcheck
+sbclaude
 schemafile
 sdist
 sessionfinish
 setattr
 shellcheck
 shellformat
+shopt
 skiptoken
 snapcraft
 somename
@@ -119,11 +124,9 @@ tatsh
 testpaths
 toctree
 tolower
-tomlkit
 tomllib
 tostring
 tryfirst
-typeshed
 ubyte
 udvare
 undraft
@@ -135,9 +138,9 @@ virtualenv
 winget
 wiswa
 wiswa's
-worktree
 wsgi
 yapf
 yapfignore
 yarnrc
 zizmor
+Ångström
