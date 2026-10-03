@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from django.db.models import Q
-from minchoc.filterlex import tokens  # ruff:ignore[unused-import]
 from ply import yacc
+
+from minchoc.filterlex import tokens  # ruff:ignore[unused-import]
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

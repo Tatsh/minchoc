@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
-from minchoc.filteryacc import InvalidTypeForEq, parser
 import pytest
+
+from minchoc.filteryacc import InvalidTypeForEq, parser
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

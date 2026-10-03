@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from django.http import HttpRequest
-from minchoc.models import Company, NugetUser, Package, Tag
 import pytest
+
+from minchoc.models import Company, NugetUser, Package, Tag
 
 
 @pytest.mark.django_db
@@ -53,6 +54,7 @@ def test_request_has_valid_token(nuget_user: NugetUser) -> None:
 @pytest.mark.django_db
 def test_only_one_nuget_user_is_created_on_first_save() -> None:
     from django.contrib.auth.models import User
+
     from minchoc.models import NugetUser
     user = User._default_manager.create()
     assert user is not None

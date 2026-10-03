@@ -12,9 +12,10 @@ from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpRequest, QueryDict
+import pytest
+
 from minchoc.models import NugetUser, Package
 from minchoc.views import APIV2PackageView
-import pytest
 
 if TYPE_CHECKING:
     from django.http import HttpResponse
