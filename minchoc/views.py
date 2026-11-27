@@ -572,7 +572,7 @@ async def _asave_uploaded_package(request: HttpRequest) -> None:
 class APIV2PackageView(View):
     """API V2 package upload view."""
     @override
-    async def dispatch(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+    async def dispatch(  # type: ignore[override]  # ty: ignore[incompatible-method-override]
             self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         """
         Check if a user is authorised before allowing the request to continue.
