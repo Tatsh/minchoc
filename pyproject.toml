@@ -4,12 +4,12 @@ requires = ["hatchling"]
 
 [dependency-groups]
 dev = [
-  "commitizen>=4.19.0",
+  "commitizen>=4.19.4",
   "cz-path>=0.0.7",
-  "django-stubs>=6.1.1",
-  "mypy>=2.3.1",
-  "ruff==0.17.5",
-  "ty>=0.0.84",
+  "django-stubs>=6.1.2",
+  "mypy>=2.4.1",
+  "ruff==0.17.6",
+  "ty>=0.0.107",
   "types-defusedxml>=0.7.0.20260504",
   "yapf>=0.43.0"
 ]
@@ -20,16 +20,16 @@ docs = [
   "esbonio>=2.1.0",
   "restructuredtext-lint>=2.0.2",
   "sphinx-datatables>=1.0.0",
-  "sphinx-immaterial>=0.13.9",
-  "sphinx>=9.1.0; python_version >= \"3.13\""
+  "sphinx-immaterial>=0.13.12",
+  "sphinx>=9.2.0; python_version >= \"3.13\""
 ]
 tests = [
   "coveralls>=4.1.0",
   "mock>=5.2.0",
   "pytest-cov>=7.1.0",
   "pytest-django>=4.14.0",
-  "pytest-mock>=3.16.0",
-  "pytest>=9.1.1"
+  "pytest-mock>=3.17.0",
+  "pytest>=9.2.0"
 ]
 
 [project]
@@ -50,7 +50,7 @@ classifiers = [
 ]
 dependencies = [
   "defusedxml>=0.7.1",
-  "django-stubs-ext>=6.1.1",
+  "django-stubs-ext>=6.1.2",
   "django>=5.2.11",
   "ply>=3.11",
   "typing-extensions>=4.16.0"
@@ -60,7 +60,7 @@ keywords = ["chocolatey", "django", "windows"]
 license = "MIT"
 name = "minchoc"
 readme = "README.md"
-requires-python = ">=3.11,<4.0"
+requires-python = ">=3.11.5,<4.0"
 version = "0.2.0"
 
 [[project.authors]]
